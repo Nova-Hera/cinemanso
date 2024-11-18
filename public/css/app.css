@@ -1,0 +1,65 @@
+#login {
+    display: flex;
+    justify-content: center;
+    height: 70vh;
+}
+
+#login .container {
+    color: #fff;
+    display: flex;
+    align-self: center;
+}
+
+.box-title {
+    margin-bottom: 50px;
+    font-size: 2rem;
+}
+
+.box-input {
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+}
+
+.box-input label {
+    margin-right: 5px;
+}
+
+.box-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.box-form button {
+    font-size: 1.6rem;
+    color: greenyellow;
+}
+
+.box-input input {
+    border-radius: 28px;
+    color: black;
+}
+
+.btn {
+    color: white;
+    padding: 10px 20px;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+.form-confirm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    border-radius: 20px;
+    border: 1px solid green;
+    padding: 20px;
+    width: 100%;
+    height: 20px;
+}
+
+.right {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 0;
+}
