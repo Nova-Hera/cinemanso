@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'tmdb' => [
+        'key'        => env('TMDB_API_KEY'),
+        'base_url'   => 'https://api.themoviedb.org/3',
+        'image_base' => 'https://image.tmdb.org/t/p/w500',
+    ],
+
 ];

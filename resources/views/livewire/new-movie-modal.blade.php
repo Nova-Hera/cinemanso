@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\Movie;
+use App\Services\Tmdb;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Volt\Component;
@@ -9,40 +12,80 @@ use Livewire\WithFileUploads;
 new class extends Component {
     use WithFileUploads;
 
-    public bool $open = false;
-    public string $title = '';
-    public string $director = '';
-    public string $genre = '';
-    public string $releaseDate = '';
-    public string $watchedAt = '';
-    public string $status = 'watchlist';
-    public string $description = '';
-    public $poster = null;
+    public bool   $open          = false;
+    public string $title         = '';
+    public string $director      = '';
+    public string $genre         = '';
+    public string $releaseDate   = '';
+    public string $watchedAt     = '';
+    public string $status        = 'watchlist';
+    public string $description   = '';
+    public array  $genres        = [];
+    public array  $searchResults = [];
+    public string $posterUrl     = '';
+    public        $poster        = null;
 
     #[On('open-new-movie')]
     public function openModal(): void
     {
-        if(!auth()->check()) {
+        if (!auth()->check()) return;
+        $this->open = true;
+        $this->reset(['title', 'director', 'releaseDate', 'watchedAt', 'description', 'poster',
+                      'genres', 'searchResults', 'posterUrl']);
+        $this->status = 'watchlist';
+    }
+
+    public function searchTmdb(): void
+    {
+        if (!auth()->check()) return;
+
+        $tmdb = app(Tmdb::class);
+        if (!$tmdb->configured()) {
+            $this->addError('title', 'Chave da API TMDB não configurada.');
             return;
         }
-        $this->open = true;
-        $this->reset(['title', 'director', 'genre', 'releaseDate', 'watchedAt', 'description', 'poster']);
-        $this->status = 'watchlist';
+        if (trim($this->title) === '') {
+            $this->addError('title', 'Digite um título para buscar.');
+            return;
+        }
+
+        $this->searchResults = $tmdb->search($this->title);
+    }
+
+    public function selectResult(int $id): void
+    {
+        if (!auth()->check()) return;
+
+        $d = app(Tmdb::class)->details($id);
+        if (empty($d)) return;
+
+        $this->title         = $d['title'];
+        $this->director      = $d['director'];
+        $this->releaseDate   = $d['releaseDate'];
+        $this->description   = $d['description'];
+        $this->genres        = $d['genres'];
+        $this->posterUrl     = $d['posterUrl'];
+        $this->searchResults = [];
+    }
+
+    public function dismissSearch(): void
+    {
+        $this->searchResults = [];
     }
 
     public function save(): void
     {
-        if(!auth()->check()) {
-            return;
-        }
+        if (!auth()->check()) return;
+
         $this->validate([
             'title'       => 'required|string|max:255',
             'director'    => 'nullable|string|max:255',
-            'genre'       => 'nullable|string|max:255',
             'releaseDate' => 'nullable|date',
             'watchedAt'   => 'nullable|date',
             'status'      => 'required|in:watchlist,watching,watched',
             'description' => 'nullable|string',
+            'genres'      => 'array',
+            'genres.*'    => 'in:' . implode(',', Movie::GENRES),
             'poster'      => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:4096',
         ]);
 
@@ -58,13 +101,21 @@ new class extends Component {
             $ext = $this->poster->extension();
             $this->poster->storeAs('posters', $slug . '.' . $ext, 'public');
             $posterPath = 'posters/' . $slug . '.' . $ext;
+        } elseif ($this->posterUrl !== '') {
+            try {
+                $body = Http::timeout(10)->get($this->posterUrl)->body();
+                Storage::disk('public')->put("posters/{$slug}.jpg", $body);
+                $posterPath = "posters/{$slug}.jpg";
+            } catch (\Throwable) {
+                $posterPath = '';
+            }
         }
 
         $movie = Movie::create([
             'title'        => $this->title,
             'slug'         => $slug,
             'director'     => $this->director ?: null,
-            'genre'        => $this->genre ?: null,
+            'genres'       => $this->genres,
             'release_date' => $this->releaseDate ?: null,
             'watched_at'   => $this->watchedAt ?: null,
             'status'       => $this->status,
@@ -79,7 +130,8 @@ new class extends Component {
 
     public function close(): void
     {
-        $this->open = false;
+        $this->open          = false;
+        $this->searchResults = [];
     }
 }; ?>
 
@@ -98,32 +150,93 @@ new class extends Component {
 
                 <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3">
 
-                    <flux:input wire:model="title" label="Título" placeholder="Nome do filme" required autofocus />
+                    {{-- Title + TMDB search --}}
+                    <div class="flex gap-2 items-end">
+                        <div class="flex-1">
+                            <flux:input wire:model="title" label="Título" placeholder="Nome do filme" required autofocus />
+                        </div>
+                        <flux:button type="button" wire:click="searchTmdb" size="sm"
+                                     style="background:rgb(1,180,228);color:#fff;border:none;flex-shrink:0;padding-bottom:0.45rem;">
+                            <span wire:loading.remove wire:target="searchTmdb">Buscar</span>
+                            <span wire:loading wire:target="searchTmdb">…</span>
+                        </flux:button>
+                    </div>
+
+                    @error('title') <p class="text-xs text-red-500 -mt-2">{{ $message }}</p> @enderror
+
+                    {{-- Search results dropdown --}}
+                    @if (!empty($searchResults))
+                        <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden -mt-1">
+                            <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                                <span class="text-xs text-zinc-500">Selecione o filme correto</span>
+                                <button type="button" wire:click="dismissSearch" class="text-xs text-zinc-400 hover:text-zinc-600">✕</button>
+                            </div>
+                            @foreach ($searchResults as $r)
+                                <button type="button" wire:click="selectResult({{ $r['id'] }})"
+                                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-left transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                                    @if ($r['thumb'])
+                                        <img src="{{ $r['thumb'] }}" alt="{{ $r['title'] }}"
+                                             class="w-8 rounded flex-shrink-0" style="aspect-ratio:2/3;object-fit:cover;" />
+                                    @else
+                                        <div class="w-8 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" style="aspect-ratio:2/3;"></div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">{{ $r['title'] }}</p>
+                                        <p class="text-xs text-zinc-400">{{ $r['year'] }}</p>
+                                    </div>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <div class="grid grid-cols-2 gap-3">
                         <flux:input wire:model="director" label="Diretor" placeholder="Nome do diretor" />
-                        <flux:input wire:model="genre" label="Gênero" placeholder="Ação, Drama..." />
+                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                         <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
+                        <div>
+                            <flux:label>Status</flux:label>
+                            <select wire:model="status"
+                                    class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="watchlist">Watchlist</option>
+                                <option value="watching">Assistindo</option>
+                                <option value="watched">Visto</option>
+                            </select>
+                        </div>
                     </div>
 
+                    {{-- Genre chips --}}
                     <div>
-                        <flux:label>Status</flux:label>
-                        <select wire:model="status"
-                                class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <option value="watchlist">Watchlist</option>
-                            <option value="watching">Assistindo</option>
-                            <option value="watched">Visto</option>
-                        </select>
+                        <flux:label>Gênero</flux:label>
+                        <div class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach (\App\Models\Movie::GENRES as $g)
+                                <label class="cursor-pointer select-none">
+                                    <input type="checkbox" wire:model="genres" value="{{ $g }}" class="sr-only peer">
+                                    <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium border
+                                                 border-zinc-300 dark:border-zinc-600
+                                                 text-zinc-600 dark:text-zinc-300
+                                                 peer-checked:border-green-500 peer-checked:bg-green-500/10
+                                                 peer-checked:text-green-600 dark:peer-checked:text-green-400
+                                                 transition-colors">{{ $g }}</span>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
 
                     <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="2" />
 
+                    {{-- Poster --}}
                     <div>
                         <flux:label>Poster</flux:label>
+                        @if ($posterUrl && !$poster)
+                            <div class="mt-1 mb-2 flex items-center gap-3">
+                                <img src="{{ $posterUrl }}" alt="Preview"
+                                     class="w-12 rounded object-cover flex-shrink-0" style="aspect-ratio:2/3;" />
+                                <span class="text-xs text-zinc-400">Imagem do TMDB — substituir abaixo se necessário</span>
+                            </div>
+                        @endif
                         <input type="file" wire:model="poster" accept="image/*"
                                class="mt-1 w-full text-sm text-zinc-600 dark:text-zinc-400
                                       file:mr-3 file:rounded-md file:border-0
@@ -135,8 +248,6 @@ new class extends Component {
                         <div wire:loading wire:target="poster" class="text-xs text-zinc-400 mt-1">Carregando...</div>
                         @error('poster') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
-
-                    @error('title') <p class="text-xs text-red-500 -mt-2">{{ $message }}</p> @enderror
 
                     <flux:button type="submit" class="w-full" style="background:rgb(0,123,24);color:#fff;border:none">
                         Adicionar Filme

@@ -37,12 +37,18 @@ class MovieController extends Controller
         }
 
         if ($movie->rating !== null) {
-            $ranking = Movie::whereNotNull('rating')->where('rating', '>', $movie->rating)->count()+1;
+            $ranking = Movie::whereNotNull('rating')->where('rating', '>', $movie->rating)->count() + 1;
 
-            $genreRanking = $movie->genre ? Movie::whereNotNull('rating')->where('genre', $movie->genre)->where('rating', '>', $movie->rating)->count()+1 : null;
+            $genreRankings = [];
+            foreach ($movie->genres ?? [] as $g) {
+                $genreRankings[$g] = Movie::whereNotNull('rating')
+                    ->whereJsonContains('genres', $g)
+                    ->where('rating', '>', $movie->rating)
+                    ->count() + 1;
+            }
         } else {
-            $ranking = null;
-            $genreRanking = null;
+            $ranking       = null;
+            $genreRankings = [];
         }
 
         $recent = session()->get('recent_items', []);
@@ -52,7 +58,7 @@ class MovieController extends Controller
 
         $userReview = auth()->check() ? $movie->reviews->firstWhere('user_id', auth()->id()) : null;
 
-        return view('movies.show', compact('movie', 'userReview', 'media', 'mediana', 'moda', 'ranking', 'genreRanking'));
+        return view('movies.show', compact('movie', 'userReview', 'media', 'mediana', 'moda', 'ranking', 'genreRankings'));
     }
 
     public function updateStatus(Movie $movie, \Illuminate\Http\Request $request)

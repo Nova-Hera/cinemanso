@@ -25,7 +25,7 @@
                     </div>
                     <div>
                         <dt class="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">GÊNERO</dt>
-                        <dd class="text-zinc-800 dark:text-zinc-200">{{ $movie->genre ?? '—' }}</dd>
+                        <dd class="text-zinc-800 dark:text-zinc-200">{{ !empty($movie->genres) ? implode(', ', $movie->genres) : '—' }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">LANÇAMENTO</dt>
@@ -76,10 +76,12 @@
                     @else
                         <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
                     @endif
-                    @if ($genreRanking !== null)
-                        <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                            Em {{ $movie->genre }}:
-                            <span class="font-bold" style="{{ $medalColor($genreRanking) }}">#{{ $genreRanking }}</span>
+                    @if (!empty($genreRankings))
+                        <div class="text-sm text-zinc-500 dark:text-zinc-400 flex flex-wrap gap-x-2 gap-y-0.5">
+                            @foreach ($genreRankings as $g => $rank)
+                                <span>Em {{ $g }}: <span class="font-bold" style="{{ $medalColor($rank) }}">#{{ $rank }}</span></span>
+                                @if (!$loop->last)<span class="text-zinc-300 dark:text-zinc-600">·</span>@endif
+                            @endforeach
                         </div>
                     @endif
                 </div>

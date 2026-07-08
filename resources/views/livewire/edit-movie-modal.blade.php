@@ -12,20 +12,20 @@ new class extends Component {
     public int    $movieId       = 0;
     public string $title         = '';
     public string $director      = '';
-    public string $genre         = '';
+    public array  $genres        = [];
     public string $releaseDate   = '';
     public string $watchedAt     = '';
     public string $status        = 'watchlist';
     public string $description   = '';
     public string $currentPoster = '';
-    public $poster               = null;
+    public        $poster        = null;
 
     public function mount(Movie $movie): void
     {
         $this->movieId       = $movie->id;
         $this->title         = $movie->title;
         $this->director      = $movie->director ?? '';
-        $this->genre         = $movie->genre ?? '';
+        $this->genres        = $movie->genres ?? [];
         $this->releaseDate   = $movie->release_date?->format('Y-m-d') ?? '';
         $this->watchedAt     = $movie->watched_at?->format('Y-m-d') ?? '';
         $this->status        = $movie->status;
@@ -47,11 +47,12 @@ new class extends Component {
         $this->validate([
             'title'       => 'required|string|max:255',
             'director'    => 'nullable|string|max:255',
-            'genre'       => 'nullable|string|max:255',
             'releaseDate' => 'nullable|date',
             'watchedAt'   => 'nullable|date',
             'status'      => 'required|in:watchlist,watching,watched',
             'description' => 'nullable|string',
+            'genres'      => 'array',
+            'genres.*'    => 'in:' . implode(',', Movie::GENRES),
             'poster'      => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:4096',
         ]);
 
@@ -67,7 +68,7 @@ new class extends Component {
         $movie->update([
             'title'        => $this->title,
             'director'     => $this->director ?: null,
-            'genre'        => $this->genre ?: null,
+            'genres'       => $this->genres,
             'release_date' => $this->releaseDate ?: null,
             'watched_at'   => $this->watchedAt ?: null,
             'status'       => $this->status,
@@ -112,28 +113,50 @@ new class extends Component {
 
                     <div class="grid grid-cols-2 gap-3">
                         <flux:input wire:model="director" label="Diretor" placeholder="Nome do diretor" />
-                        <flux:input wire:model="genre" label="Gênero" placeholder="Ação, Drama..." />
+                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
-                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                         <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
+                        <div>
+                            <flux:label>Status</flux:label>
+                            <select wire:model="status"
+                                    class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="watchlist">Watchlist</option>
+                                <option value="watching">Assistindo</option>
+                                <option value="watched">Visto</option>
+                            </select>
+                        </div>
                     </div>
 
+                    {{-- Genre chips --}}
                     <div>
-                        <flux:label>Status</flux:label>
-                        <select wire:model="status"
-                                class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <option value="watchlist">Watchlist</option>
-                            <option value="watching">Assistindo</option>
-                            <option value="watched">Visto</option>
-                        </select>
+                        <flux:label>Gênero</flux:label>
+                        <div class="mt-1.5 flex flex-wrap gap-1.5">
+                            @foreach (\App\Models\Movie::GENRES as $g)
+                                <label class="cursor-pointer select-none">
+                                    <input type="checkbox" wire:model="genres" value="{{ $g }}" class="sr-only peer">
+                                    <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium border
+                                                 border-zinc-300 dark:border-zinc-600
+                                                 text-zinc-600 dark:text-zinc-300
+                                                 peer-checked:border-green-500 peer-checked:bg-green-500/10
+                                                 peer-checked:text-green-600 dark:peer-checked:text-green-400
+                                                 transition-colors">{{ $g }}</span>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
 
                     <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="2" />
 
                     <div>
                         <flux:label>Trocar Poster</flux:label>
+                        @if ($currentPoster)
+                            <div class="mt-1 mb-2">
+                                <img src="{{ asset('storage/' . $currentPoster) }}" alt="Poster atual"
+                                     class="w-12 rounded object-cover" style="aspect-ratio:2/3;" />
+                            </div>
+                        @endif
                         <input type="file" wire:model="poster" accept="image/*"
                                class="mt-1 w-full text-sm text-zinc-600 dark:text-zinc-400
                                       file:mr-3 file:rounded-md file:border-0

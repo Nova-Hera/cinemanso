@@ -131,6 +131,13 @@
         </div>
     @endif
 
+    <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"
+       class="fixed bottom-3 left-3 z-40 opacity-60 hover:opacity-100 transition-opacity"
+       title="Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.">
+        <img src="{{ asset('images/tmdb.svg') }}" alt="Dados de filmes fornecidos por TMDB"
+             style="height:18px; width:auto;" />
+    </a>
+
     <script>
         window.addEventListener('wheel-spin', function (e) {
             var targetAngle = e.detail.targetAngle;

@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Movie extends Model
 {
+    public const GENRES = [
+        'Ação', 'Aventura', 'Comédia', 'Drama', 'Romance',
+        'Terror / Horror', 'Suspense / Thriller', 'Ficção Científica',
+        'Fantasia', 'Animação', 'Documentário', 'Musical',
+        'Crime / Policial', 'Guerra', 'Western (Faroeste)',
+    ];
+
     protected $fillable = [
         'title',
         'slug',
@@ -13,7 +20,7 @@ class Movie extends Model
         'director',
         'poster',
         'release_date',
-        'genre',
+        'genres',
         'watched_at',
         'rating',
         'status',
@@ -22,7 +29,8 @@ class Movie extends Model
 
     protected $casts = [
         'release_date' => 'date',
-        'watched_at' => 'date',
+        'watched_at'   => 'date',
+        'genres'       => 'array',
     ];
 
     public function reviews()
