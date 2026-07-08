@@ -7,7 +7,12 @@ use \App\Http\Controllers;
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('movies', function () {
-    return view('movies.index', ['movies' => \App\Models\Movie::orderBy('title')->get()]);
+    $status = request('status');
+    $query = \App\Models\Movie::orderBy('title');
+    if (in_array($status, ['watchlist', 'watching', 'watched'])) {
+        $query->where('status', $status);
+    }
+    return view('movies.index', ['movies' => $query->get(), 'currentStatus' => $status]);
 })->name('movies.index');
 
 Route::get('movies/{movie:slug}', [\App\Http\Controllers\MovieController::class, 'show'])->name('movies.show');

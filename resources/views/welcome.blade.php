@@ -8,7 +8,7 @@
                 </p>
             </div>
         @else
-            <div class="grid gap-4 grid-cols-4">
+            <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 @foreach ($items as $item)
                     @if ($item['type'] === 'movie')
                         @php $movie = $item['model']; @endphp

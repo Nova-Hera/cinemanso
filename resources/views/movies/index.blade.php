@@ -3,6 +3,15 @@
 
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold tracking-tight">Filmes</h1>
+            <form method="GET" action="{{ route('movies.index') }}">
+                <select name="status" onchange="this.form.submit()"
+                        style="background:transparent; border:1px solid rgb(161,161,170); border-radius:0.5rem; padding:0.4rem 0.75rem; font-size:0.875rem; color:inherit; cursor:pointer;">
+                    <option style="color:black" value="" @selected(!$currentStatus)>Todos</option>
+                    <option style="color:black" value="watchlist" @selected($currentStatus === 'watchlist')>Watchlist</option>
+                    <option style="color:black" value="watching"  @selected($currentStatus === 'watching')>Assistindo</option>
+                    <option style="color:black" value="watched"   @selected($currentStatus === 'watched')>Visto</option>
+                </select>
+            </form>
         </div>
 
         @if ($movies->isEmpty())

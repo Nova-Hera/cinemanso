@@ -15,7 +15,7 @@
             width: 18rem;
             transition: width 300ms ease;
             overflow: hidden;
-            height: 100%;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
         }
@@ -81,6 +81,11 @@
             min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        .sidebar-scroll-area::-webkit-scrollbar {
+            display: none;
         }
 
         .sidebar-footer {
@@ -368,6 +373,16 @@
                         class="sidebar-nav-item"
                     >
                         <span class="sidebar-fade">Home</span>
+                    </flux:navlist.item>
+
+                    <flux:navlist.item
+                        icon="film"
+                        :href="route('movies.index')"
+                        :current="request()->routeIs('movies.index')"
+                        wire:navigate
+                        class="sidebar-nav-item"
+                    >
+                        <span class="sidebar-fade">Filmes</span>
                     </flux:navlist.item>
 
                     @if(auth()->check())

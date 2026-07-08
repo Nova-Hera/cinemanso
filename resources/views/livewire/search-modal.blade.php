@@ -29,7 +29,7 @@ new class extends Component {
         }
 
         $q = '%' . $this->query . '%';
-        $this->movies = Movie::where('title', 'like', $q)->limit(5)->get(['id', 'title', 'slug', 'poster'])->toArray();
+        $this->movies = Movie::where('title', 'like', $q)->limit(5)->get(['id', 'title', 'slug', 'poster', 'status'])->toArray();
         $this->users = User::where('name', 'like', $q)->orWhere('username', 'like', $q)->limit(5)->get(['id', 'name', 'username', 'profile_picture'])->toArray();
     }
 
@@ -74,7 +74,20 @@ new class extends Component {
                                             @else
                                                 <div class="h-10 w-7 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0"></div>
                                             @endif
-                                            <span class="text-sm font-medium truncate">{{ $movie['title'] }}</span>
+                                            <span class="text-sm font-medium truncate flex-1">{{ $movie['title'] }}</span>
+                                            @php
+                                                $sb = match($movie['status']) {
+                                                    'watched'   => ['label' => 'Visto',      'style' => 'background:rgb(23,221,98);color:#000'],
+                                                    'watching'  => ['label' => 'Assistindo', 'style' => 'background:rgb(217,119,6);color:#fff'],
+                                                    'watchlist' => ['label' => 'Watchlist',  'style' => 'background:rgb(82,82,91);color:#fff'],
+                                                    default     => null,
+                                                };
+                                            @endphp
+                                            @if ($sb)
+                                                <span style="{{ $sb['style'] }}; border-radius:9999px; padding:0.125rem 0.5rem; font-size:0.7rem; font-weight:600; flex-shrink:0;">
+                                                    {{ $sb['label'] }}
+                                                </span>
+                                            @endif
                                         </a>
                                     @endforeach
                                 </div>
