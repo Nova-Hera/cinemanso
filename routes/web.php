@@ -8,11 +8,36 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 
 Route::get('movies', function () {
     $status = request('status');
-    $query = \App\Models\Movie::orderBy('title');
+    $sort   = request('sort', 'title');
+
+    $query = \App\Models\Movie::with('reviews');
     if (in_array($status, ['watchlist', 'watching', 'watched'])) {
         $query->where('status', $status);
     }
-    return view('movies.index', ['movies' => $query->get(), 'currentStatus' => $status]);
+    $movies = $query->get();
+
+    $movies = match($sort) {
+        'media' => $movies->sortByDesc(
+            fn($m) => $m->reviews->avg('rating') ?? -1
+        ),
+        'mediana' => $movies->sortByDesc(function ($m) {
+            $r = $m->reviews->pluck('rating')->sort()->values();
+            if ($r->isEmpty()) return -1;
+            $c = $r->count(); $mid = (int)($c / 2);
+            return $c % 2 === 0 ? ($r[$mid - 1] + $r[$mid]) / 2 : $r[$mid];
+        }),
+        'moda' => $movies->sortByDesc(
+            fn($m) => $m->reviews->isEmpty() ? -1
+                : $m->reviews->pluck('rating')->countBy()->sortDesc()->keys()->first()
+        ),
+        default => $movies->sortBy('title'),
+    };
+
+    return view('movies.index', [
+        'movies'        => $movies->values(),
+        'currentStatus' => $status,
+        'currentSort'   => $sort,
+    ]);
 })->name('movies.index');
 
 Route::get('movies/{movie:slug}', [\App\Http\Controllers\MovieController::class, 'show'])->name('movies.show');
