@@ -33,8 +33,8 @@ class Tmdb
     public function __construct()
     {
         $this->key       = config('services.tmdb.key', '');
-        $this->base      = config('services.tmdb.base_url');
-        $this->imageBase = config('services.tmdb.image_base');
+        $this->base      = config('services.tmdb.base_url', 'https://api.themoviedb.org/3');
+        $this->imageBase = config('services.tmdb.image_base', 'https://image.tmdb.org/t/p/w500');
     }
 
     public function configured(): bool
