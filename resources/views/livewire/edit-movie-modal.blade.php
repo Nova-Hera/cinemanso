@@ -113,11 +113,6 @@ new class extends Component {
 
                     <div class="grid grid-cols-2 gap-3">
                         <flux:input wire:model="director" label="Diretor" placeholder="Nome do diretor" />
-                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 items-end">
-                        <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
                         <div>
                             <flux:label>Status</flux:label>
                             <select wire:model="status"
@@ -129,7 +124,11 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- Genre chips --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
+                        <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
+                    </div>
+
                     <div>
                         <flux:label>Gênero</flux:label>
                         <div class="mt-1.5 flex flex-wrap gap-1.5">

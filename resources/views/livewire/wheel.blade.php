@@ -1,17 +1,18 @@
 <div class="flex flex-col items-center gap-6 pb-8"
      x-data="{
-        rotation: @js($initRotation),
+        rotation: 0,
         spinning: false,
-        showResult: @js($initShowResult),
+        showResult: false,
         spinTo(angle) {
             this.spinning = true;
             const current = ((this.rotation % 360) + 360) % 360;
             const target  = (((360 - angle) % 360) + 360) % 360;
             const delta   = (((target - current) % 360) + 360) % 360;
             this.rotation += (5 * 360) + delta;
-            setTimeout(() => { this.showResult = true; }, 4200);
+            setTimeout(() => { this.showResult = true; this.spinning = false; }, 4200);
         }
      }"
+     x-init="rotation = @js($initRotation); showResult = @js($initShowResult);"
      @wheel-spin.window="spinTo($event.detail.targetAngle)"
      wire:poll.3000ms="poll">
 

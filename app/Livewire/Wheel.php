@@ -2,10 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Events\WheelSpun;
 use App\Models\Movie;
 use App\Models\WheelDraw;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('components.layouts.app', ['title' => 'Roleta'])]
@@ -143,7 +145,7 @@ class Wheel extends Component
 
         $angle = $this->angleForMovie($live, $movie->id);
 
-        WheelDraw::create([
+        $draw = WheelDraw::create([
             'movie_id'     => $movie->id,
             'drawn_at'     => now(),
             'target_angle' => $angle,
@@ -153,7 +155,20 @@ class Wheel extends Component
         $movie->update(['status' => 'watching', 'watched_at' => now()->toDateString()]);
         DB::table('wheel_votes')->update(['ready' => false]);
 
-        // refresh() picks up the brand-new draw as the active spin and dispatches the animation.
+        // Broadcast so every other open wheel spins at the same instant.
+        broadcast(new WheelSpun($draw->id, (float) $angle));
+
+        // refresh() picks up the brand-new draw and animates it for the clicker right away.
+        $this->refresh();
+    }
+
+    /**
+     * A movie was drawn on another client. Re-sync — refresh() detects the fresh
+     * draw and dispatches the spin animation to this browser.
+     */
+    #[On('echo:wheel,.WheelSpun')]
+    public function onWheelSpun(): void
+    {
         $this->refresh();
     }
 
