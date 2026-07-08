@@ -48,19 +48,34 @@
 
                 @php
                     $medalColor = fn ($r) => $r == 1 ? 'color:rgb(190,160,0)' : ($r == 2 ? 'color:rgb(192,192,192)' : ($r == 3 ? 'color:rgb(184,115,51)' : 'color:inherit'));
+                    $statusBadge = match ($movie->status) {
+                        'watched'   => ['label' => 'Visto',      'style' => 'background:rgb(23,221,98);color:#000'],
+                        'watching'  => ['label' => 'Assistindo', 'style' => 'background:rgb(217,119,6);color:#fff'],
+                        default     => ['label' => 'Watchlist',  'style' => 'background:rgb(82,82,91);color:#fff'],
+                    };
                 @endphp
                 <div class="flex flex-col gap-1">
-                    <div class="flex items-baseline gap-4 flex-wrap">
+                    <div class="flex items-center gap-4 flex-wrap">
                         <h1 class="text-3xl font-black leading-tight tracking-tight" style="color:rgb(23,221,98);">{{ $movie->title }}</h1>
-                        @if ($ranking !== null)
-                            <div class="text-base text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                                Ranqueado
-                                <span class="font-bold" style="{{ $medalColor($ranking) }}">#{{ $ranking }}</span>
+                        <span style="{{ $statusBadge['style'] }}; border-radius:9999px; padding:0.2rem 0.6rem; font-size:0.75rem; font-weight:600; flex-shrink:0;">
+                            {{ $statusBadge['label'] }}
+                        </span>
+                        
+                        @auth
+                            <div class="ml-auto flex-shrink-0">
+                                <flux:button size="sm" icon="pencil-square" variant="ghost" inset
+                                             onclick="Livewire.dispatch('open-edit-movie')" />
                             </div>
-                        @else
-                            <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
-                        @endif
+                        @endauth
                     </div>
+                    @if ($ranking !== null)
+                        <div class="text-base text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                            Ranqueado
+                            <span class="font-bold" style="{{ $medalColor($ranking) }}">#{{ $ranking }}</span>
+                        </div>
+                    @else
+                        <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
+                    @endif
                     @if ($genreRanking !== null)
                         <div class="text-sm text-zinc-500 dark:text-zinc-400">
                             Em {{ $movie->genre }}:
@@ -181,19 +196,9 @@
                             @endif
 
                         </div>
-                    @endauth
 
-                    <form method="POST" action="{{ route('movies.updateStatus', $movie) }}">
-                        @csrf
-                        @method('PATCH')
-                        <select name="status"
-                                onchange="this.form.submit()"
-                                style="background:transparent; border:1px solid rgb(161,161,170); border-radius:0.5rem; padding:0.4rem 0.75rem; font-size:0.875rem; color:inherit; cursor:pointer;">
-                            <option style="color:black" value="watchlist" @selected($movie->status === 'watchlist')>Watchlist</option>
-                            <option style="color:black" value="watching"  @selected($movie->status === 'watching')>Assistindo</option>
-                            <option style="color:black" value="watched"   @selected($movie->status === 'watched')>Visto</option>
-                        </select>
-                    </form>
+                        <livewire:edit-movie-modal :movie="$movie" />
+                    @endauth
 
                 </div>
 
