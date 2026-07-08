@@ -70,6 +70,7 @@ new class extends Component {
             'status'       => $this->status,
             'description'  => $this->description ?: null,
             'poster'       => $posterPath,
+            'added_by'     => auth()->id(),
         ]);
 
         $this->open = false;
@@ -84,27 +85,27 @@ new class extends Component {
 
 <div>
     @if ($open)
-        <div class="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4"
+        <div class="fixed inset-0 z-50 flex items-start justify-center pt-6 px-4"
              @keydown.escape.window="$wire.close()">
             <div class="absolute inset-0 bg-black/60" wire:click="close"></div>
 
             <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
 
-                <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">
                     <h2 class="text-base font-semibold">Novo Filme</h2>
                     <flux:button size="sm" icon="x-mark" variant="ghost" inset wire:click="close" />
                 </div>
 
-                <form wire:submit="save" class="px-5 py-4 flex flex-col gap-4 max-h-[calc(100vh-10rem)] overflow-y-auto">
+                <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3">
 
                     <flux:input wire:model="title" label="Título" placeholder="Nome do filme" required autofocus />
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <flux:input wire:model="director" label="Diretor" placeholder="Nome do diretor" />
                         <flux:input wire:model="genre" label="Gênero" placeholder="Ação, Drama..." />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                         <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
                     </div>
@@ -119,7 +120,7 @@ new class extends Component {
                         </select>
                     </div>
 
-                    <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="3" />
+                    <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="2" />
 
                     <div>
                         <flux:label>Poster</flux:label>
@@ -137,11 +138,9 @@ new class extends Component {
 
                     @error('title') <p class="text-xs text-red-500 -mt-2">{{ $message }}</p> @enderror
 
-                    <div class="flex gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                        <flux:button type="submit" class="flex-1" style="background:rgb(0,123,24);color:#fff;border:none">
-                            Adicionar Filme
-                        </flux:button>
-                    </div>
+                    <flux:button type="submit" class="w-full" style="background:rgb(0,123,24);color:#fff;border:none">
+                        Adicionar Filme
+                    </flux:button>
 
                 </form>
             </div>

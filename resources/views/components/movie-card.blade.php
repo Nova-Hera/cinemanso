@@ -3,6 +3,7 @@
     'title'        => null,
     'image'        => null,
     'status'       => null,
+    'rating'       => null,
     'wireNavigate' => false,
 ])
 
@@ -15,6 +16,24 @@
         'watchlist' => ['label' => 'Watchlist',  'style' => 'background:rgb(82,82,91);color:#fff'],
         default     => null,
     };
+
+    $ratingColor = null;
+    if ($rating !== null) {
+        $r = (float)$rating;
+        if ($r <= 5) {
+            $t = $r / 5;
+            $ratingColor = sprintf('rgb(%d,%d,%d)',
+                (int)(239 + $t * (234 - 239)),
+                (int)(68  + $t * (115 - 68)),
+                (int)(68  + $t * (8   - 68)));
+        } else {
+            $t = ($r - 5) / 5;
+            $ratingColor = sprintf('rgb(%d,%d,%d)',
+                (int)(234 + $t * (23  - 234)),
+                (int)(115 + $t * (221 - 115)),
+                (int)(8   + $t * (98  - 8)));
+        }
+    }
 @endphp
 
 <a href="{{ route('movies.show', ['movie' => $id]) }}"
@@ -32,6 +51,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                 </svg>
             </div>
+        @endif
+
+        @if ($ratingColor)
+            <span style="position:absolute; top:0.5rem; left:0.5rem; border-radius:9999px; padding:0.125rem 0.45rem; font-size:0.72rem; font-weight:700; background:{{ $ratingColor }}; color:#000;">
+                {{ number_format((float)$rating, 1) }}
+            </span>
         @endif
 
         @if ($badge)

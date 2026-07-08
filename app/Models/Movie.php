@@ -17,6 +17,7 @@ class Movie extends Model
         'watched_at',
         'rating',
         'status',
+        'added_by',
     ];
 
     protected $casts = [
@@ -24,8 +25,13 @@ class Movie extends Model
         'watched_at' => 'date',
     ];
 
-    public function reviews() {
+    public function reviews()
+    {
         return $this->hasMany(Reviews::class);
     }
-    
+
+    public function addedBy()
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
 }

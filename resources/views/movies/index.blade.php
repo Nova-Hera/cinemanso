@@ -31,11 +31,27 @@
         @else
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 @foreach ($movies as $movie)
+                    @php
+                        $ratingValues = $movie->reviews->pluck('rating');
+                        $displayRating = null;
+                        if ($ratingValues->isNotEmpty()) {
+                            $displayRating = match($currentSort) {
+                                'mediana' => (function() use ($ratingValues) {
+                                    $s = $ratingValues->sort()->values();
+                                    $c = $s->count(); $mid = (int)($c / 2);
+                                    return $c % 2 === 0 ? ($s[$mid-1] + $s[$mid]) / 2 : $s[$mid];
+                                })(),
+                                'moda'    => $ratingValues->countBy()->sortDesc()->keys()->first(),
+                                default   => round($ratingValues->avg(), 2),
+                            };
+                        }
+                    @endphp
                     <x-movie-card
                         :id="$movie->slug"
                         :title="$movie->title"
                         :image="$movie->poster"
                         :status="$movie->status"
+                        :rating="$displayRating"
                         :wire-navigate="true"
                     />
                 @endforeach

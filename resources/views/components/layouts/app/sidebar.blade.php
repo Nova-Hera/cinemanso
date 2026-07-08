@@ -287,6 +287,11 @@
             <flux:tooltip :content="__('Search')" position="bottom">
                 <flux:navbar.item as="button" class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" :label="__('Search')" onclick="Livewire.dispatch('open-search')" />
             </flux:tooltip>
+            @auth
+            <flux:tooltip content="Novo Filme" position="bottom">
+                <flux:navbar.item as="button" class="!h-10 [&>div>svg]:size-5" icon="plus-circle" onclick="Livewire.dispatch('open-new-movie')" />
+            </flux:tooltip>
+            @endauth
         </flux:navbar>
 
         <flux:dropdown position="top" align="end">
@@ -387,12 +392,13 @@
 
                     @if(auth()->check())
                     <flux:navlist.item
-                        icon="plus-circle"
-                        href="#"
-                        onclick="event.preventDefault(); Livewire.dispatch('open-new-movie')"
+                        icon="arrow-path"
+                        :href="route('wheel')"
+                        :current="request()->routeIs('wheel')"
+                        wire:navigate
                         class="sidebar-nav-item"
                     >
-                        <span class="sidebar-fade">Novo Filme</span>
+                        <span class="sidebar-fade">Roleta</span>
                     </flux:navlist.item>
                     @endif
 
