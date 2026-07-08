@@ -144,27 +144,31 @@ new class extends Component {
             <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
 
                 <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">
-                    <h2 class="text-base font-semibold">Novo Filme</h2>
+                    <div class="flex items-center gap-2.5">
+                        <h2 class="text-base font-semibold">Novo Filme</h2>
+                        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"
+                           title="API do TMDB é usada pra pesquisa"
+                           class="opacity-60 hover:opacity-100 transition-opacity">
+                            <img src="{{ asset('images/tmdb.svg') }}" alt="TMDB" style="height:14px; width:auto;" />
+                        </a>
+                    </div>
                     <flux:button size="sm" icon="x-mark" variant="ghost" inset wire:click="close" />
                 </div>
 
                 <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3">
 
-                    {{-- Title + TMDB search --}}
-                    <div class="flex gap-2 items-end">
-                        <div class="flex-1">
-                            <flux:input wire:model="title" label="Título" placeholder="Nome do filme" required autofocus />
+                    <div>
+                        <flux:label>Título</flux:label>
+                        <div class="flex items-center gap-1 mt-1">
+                            <flux:input wire:model="title" placeholder="Nome do filme" required autofocus class="flex-1" />
+                            <flux:button type="button" wire:click="searchTmdb" size="sm" icon="magnifying-glass"
+                                         variant="ghost" inset
+                                         wire:loading.attr="disabled" wire:target="searchTmdb" />
                         </div>
-                        <flux:button type="button" wire:click="searchTmdb" size="sm"
-                                     style="background:rgb(1,180,228);color:#fff;border:none;flex-shrink:0;padding-bottom:0.45rem;">
-                            <span wire:loading.remove wire:target="searchTmdb">Buscar</span>
-                            <span wire:loading wire:target="searchTmdb">…</span>
-                        </flux:button>
                     </div>
 
                     @error('title') <p class="text-xs text-red-500 -mt-2">{{ $message }}</p> @enderror
 
-                    {{-- Search results dropdown --}}
                     @if (!empty($searchResults))
                         <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden -mt-1">
                             <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
@@ -194,12 +198,12 @@ new class extends Component {
                         <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3 items-end">
                         <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
                         <div>
                             <flux:label>Status</flux:label>
                             <select wire:model="status"
-                                    class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    class="mt-1 h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
                                 <option value="watchlist">Watchlist</option>
                                 <option value="watching">Assistindo</option>
                                 <option value="watched">Visto</option>

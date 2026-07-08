@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class WheelDraw extends Model
 {
-    protected $fillable = ['movie_id', 'drawn_at'];
+    protected $fillable = ['movie_id', 'drawn_at', 'target_angle', 'segments'];
 
-    protected $casts = ['drawn_at' => 'datetime'];
+    protected $casts = [
+        'drawn_at'     => 'datetime',
+        'target_angle' => 'float',
+        'segments'     => 'array',
+    ];
 
     public function movie()
     {

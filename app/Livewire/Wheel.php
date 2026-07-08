@@ -11,11 +11,19 @@ use Livewire\Component;
 #[Layout('components.layouts.app', ['title' => 'Roleta'])]
 class Wheel extends Component
 {
-    public array  $segments     = [];
-    public int    $presentCount = 0;
-    public int    $readyCount   = 0;
-    public bool   $iAmReady     = false;
-    public ?array $result       = null;
+    public array  $segments       = [];
+    public int    $presentCount   = 0;
+    public int    $readyCount      = 0;
+    public bool   $iAmReady        = false;
+    public ?array $result          = null;
+    public ?int   $drawId          = null;
+    public ?float $targetAngle     = null;
+    public float  $initRotation    = 0.0;
+    public bool   $initShowResult  = false;
+    public ?int   $lastAnimatedDrawId = null;
+
+    private const RESULT_WINDOW_MIN = 10;   // how long the result card + winning layout stays shown
+    private const SPIN_FRESH_SEC    = 15;   // a draw newer than this triggers the spin animation
 
     private array $palette = [
         '#facc15', '#f97316', '#6366f1',
@@ -76,48 +84,85 @@ class Wheel extends Component
             ->where('heartbeat_at', '>=', $cutoff)
             ->exists();
 
-        if ($this->result === null) {
-            $recent = WheelDraw::with('movie')->latest('drawn_at')->first();
-            if ($recent && $recent->drawn_at->gt(now()->subMinutes(10))) {
-                $this->result = [
-                    'id'     => $recent->movie->id,
-                    'title'  => $recent->movie->title,
-                    'slug'   => $recent->movie->slug,
-                    'poster' => $recent->movie->poster,
-                ];
-            }
-        }
+        $now    = now();
+        $recent = WheelDraw::with('movie')->latest('drawn_at')->first();
 
-        $this->loadSegments();
+        $active = $recent
+            && $recent->movie
+            && $recent->drawn_at
+            && $recent->drawn_at->gt($now->copy()->subMinutes(self::RESULT_WINDOW_MIN));
+
+        if ($active) {
+            $this->result = [
+                'id'     => $recent->movie->id,
+                'title'  => $recent->movie->title,
+                'slug'   => $recent->movie->slug,
+                'poster' => $recent->movie->poster,
+            ];
+
+            // Show the wheel exactly as it was at spin time so the pointer lands on the winner.
+            $this->segments    = !empty($recent->segments) ? $recent->segments : $this->computeLiveSegments();
+            $this->drawId      = $recent->id;
+            $this->targetAngle = $recent->target_angle !== null ? (float) $recent->target_angle : null;
+
+            $fresh = $recent->drawn_at->gt($now->copy()->subSeconds(self::SPIN_FRESH_SEC));
+            $willAnimate = $fresh
+                && $this->targetAngle !== null
+                && $this->lastAnimatedDrawId !== $recent->id;
+
+            // Late arrivals (draw no longer fresh) see the wheel already resolved on the winner.
+            if ($this->targetAngle !== null && !$fresh) {
+                $this->initRotation   = fmod(360 - $this->targetAngle, 360);
+                $this->initShowResult = true;
+            } else {
+                $this->initRotation   = 0.0;
+                $this->initShowResult = false;
+            }
+
+            if ($willAnimate) {
+                $this->lastAnimatedDrawId = $recent->id;
+                $this->dispatch('wheel-spin', targetAngle: $this->targetAngle);
+            }
+        } else {
+            $this->result         = null;
+            $this->segments       = $this->computeLiveSegments();
+            $this->drawId         = null;
+            $this->targetAngle    = null;
+            $this->initRotation   = 0.0;
+            $this->initShowResult = false;
+        }
     }
 
     private function doSpin(): void
     {
-        $movie = $this->weightedPick();
+        $live = $this->computeLiveSegments();
+        if (empty($live)) return;
+
+        $movie = $this->weightedPick($live);
         if (!$movie) return;
 
-        WheelDraw::create(['movie_id' => $movie->id]);
+        $angle = $this->angleForMovie($live, $movie->id);
+
+        WheelDraw::create([
+            'movie_id'     => $movie->id,
+            'drawn_at'     => now(),
+            'target_angle' => $angle,
+            'segments'     => $live,
+        ]);
+
         $movie->update(['status' => 'watching', 'watched_at' => now()->toDateString()]);
         DB::table('wheel_votes')->update(['ready' => false]);
 
-        $this->result = [
-            'id'     => $movie->id,
-            'title'  => $movie->title,
-            'slug'   => $movie->slug,
-            'poster' => $movie->poster,
-        ];
-
-        $angle = $this->angleForMovie($movie->id);
+        // refresh() picks up the brand-new draw as the active spin and dispatches the animation.
         $this->refresh();
-        $this->dispatch('wheel-spin', targetAngle: $angle);
     }
 
-    private function weightedPick(): ?Movie
+    private function weightedPick(array $segments): ?Movie
     {
-        if (empty($this->segments)) return null;
+        if (empty($segments)) return null;
 
         $pool = [];
-        foreach ($this->segments as $seg) {
+        foreach ($segments as $seg) {
             $slots = max(1, (int) round($seg['weight'] * 100));
             for ($i = 0; $i < $slots; $i++) {
                 $pool[] = $seg['movie_id'];
@@ -128,15 +173,14 @@ class Wheel extends Component
         return Movie::find($picked);
     }
 
-    private function loadSegments(): void
+    private function computeLiveSegments(): array
     {
         $watchlist = Movie::where('status', 'watchlist')
             ->with('addedBy')
             ->get();
 
         if ($watchlist->isEmpty()) {
-            $this->segments = [];
-            return;
+            return [];
         }
 
         $totalDraws = WheelDraw::count();
@@ -226,12 +270,12 @@ class Wheel extends Component
             $currentAngle = $endAngle;
         }
 
-        $this->segments = $segments;
+        return $segments;
     }
 
-    private function angleForMovie(int $movieId): float
+    private function angleForMovie(array $segments, int $movieId): float
     {
-        foreach ($this->segments as $seg) {
+        foreach ($segments as $seg) {
             if ($seg['movie_id'] === $movieId) {
                 return $seg['centerAngle'];
             }

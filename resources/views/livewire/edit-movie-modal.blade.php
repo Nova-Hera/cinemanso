@@ -116,12 +116,12 @@ new class extends Component {
                         <flux:input type="date" wire:model="releaseDate" label="Lançamento" />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3 items-end">
                         <flux:input type="date" wire:model="watchedAt" label="Assistido em" />
                         <div>
                             <flux:label>Status</flux:label>
                             <select wire:model="status"
-                                    class="mt-1 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    class="mt-1 h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 text-sm text-zinc-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-green-500">
                                 <option value="watchlist">Watchlist</option>
                                 <option value="watching">Assistindo</option>
                                 <option value="watched">Visto</option>

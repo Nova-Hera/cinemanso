@@ -1,7 +1,19 @@
 <div class="flex flex-col items-center gap-6 pb-8"
-     x-data="{ showResult: @json(!!$result) }"
-     @wheel-spin.window="setTimeout(() => showResult = true, 4200)"
-     wire:poll.5000ms="poll">
+     x-data="{
+        rotation: @js($initRotation),
+        spinning: false,
+        showResult: @js($initShowResult),
+        spinTo(angle) {
+            this.spinning = true;
+            const current = ((this.rotation % 360) + 360) % 360;
+            const target  = (((360 - angle) % 360) + 360) % 360;
+            const delta   = (((target - current) % 360) + 360) % 360;
+            this.rotation += (5 * 360) + delta;
+            setTimeout(() => { this.showResult = true; }, 4200);
+        }
+     }"
+     @wheel-spin.window="spinTo($event.detail.targetAngle)"
+     wire:poll.3000ms="poll">
 
     <div class="w-full flex items-center justify-between">
         <h1 class="text-2xl font-bold tracking-tight">Roleta de Filmes</h1>
@@ -27,7 +39,8 @@
             <svg id="wheel-svg" viewBox="0 0 400 400"
                  style="width:100%; max-width:500px; display:block; filter:drop-shadow(0 4px 24px rgba(0,0,0,0.4));">
 
-                <g id="wheel-group" style="transform-origin:200px 200px; transform:rotate(0deg);">
+                <g id="wheel-group"
+                   :style="`transform-origin:200px 200px; transform:rotate(${rotation}deg); transition:${spinning ? 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)' : 'none'};`">
                     @foreach ($segments as $seg)
                         <path d="{{ $seg['path'] }}"
                               fill="{{ $seg['color'] }}"
@@ -130,26 +143,4 @@
 
         </div>
     @endif
-
-    <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"
-       class="fixed bottom-3 left-3 z-40 opacity-60 hover:opacity-100 transition-opacity"
-       title="Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.">
-        <img src="{{ asset('images/tmdb.svg') }}" alt="Dados de filmes fornecidos por TMDB"
-             style="height:18px; width:auto;" />
-    </a>
-
-    <script>
-        window.addEventListener('wheel-spin', function (e) {
-            var targetAngle = e.detail.targetAngle;
-            var spins = 5;
-            var finalRotation = spins * 360 + (360 - targetAngle);
-
-            var group = document.getElementById('wheel-group');
-            if (!group) return;
-
-            group.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-            group.style.transformOrigin = '200px 200px';
-            group.style.transform = 'rotate(' + finalRotation + 'deg)';
-        });
-    </script>
 </div>
