@@ -85,6 +85,7 @@ class Wheel extends Component
         if (!$movie) return;
 
         WheelDraw::create(['movie_id' => $movie->id]);
+        $movie->update(['status' => 'watching']);
         DB::table('wheel_votes')->update(['ready' => false]);
 
         $this->result = [
