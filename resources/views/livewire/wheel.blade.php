@@ -1,5 +1,5 @@
 <div class="flex flex-col items-center gap-6 pb-8"
-     x-data="{ showResult: false }"
+     x-data="{ showResult: @json(!!$result) }"
      @wheel-spin.window="setTimeout(() => showResult = true, 4200)"
      wire:poll.5000ms="poll">
 

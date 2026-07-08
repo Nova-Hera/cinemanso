@@ -25,7 +25,7 @@ class Wheel extends Component
 
     public function mount(): void
     {
-        $this->heartbeat();
+        $this->heartbeat(true);
         $this->refresh();
     }
 
@@ -50,12 +50,12 @@ class Wheel extends Component
         }
     }
 
-    private function heartbeat(): void
+    private function heartbeat(bool $resetReady = false): void
     {
         DB::table('wheel_votes')->upsert(
             ['user_id' => auth()->id(), 'ready' => false, 'heartbeat_at' => now()],
             ['user_id'],
-            ['heartbeat_at']
+            $resetReady ? ['ready', 'heartbeat_at'] : ['heartbeat_at']
         );
     }
 
@@ -75,6 +75,18 @@ class Wheel extends Component
             ->where('ready', true)
             ->where('heartbeat_at', '>=', $cutoff)
             ->exists();
+
+        if ($this->result === null) {
+            $recent = WheelDraw::with('movie')->latest('drawn_at')->first();
+            if ($recent && $recent->drawn_at->gt(now()->subMinutes(10))) {
+                $this->result = [
+                    'id'     => $recent->movie->id,
+                    'title'  => $recent->movie->title,
+                    'slug'   => $recent->movie->slug,
+                    'poster' => $recent->movie->poster,
+                ];
+            }
+        }
 
         $this->loadSegments();
     }
