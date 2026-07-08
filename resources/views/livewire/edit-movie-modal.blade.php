@@ -134,11 +134,6 @@ new class extends Component {
 
                     <div>
                         <flux:label>Trocar Poster</flux:label>
-                        @if ($currentPoster)
-                            <img src="{{ asset('storage/' . $currentPoster) }}"
-                                 alt="Poster atual"
-                                 class="mt-1 h-16 rounded object-cover mb-2" />
-                        @endif
                         <input type="file" wire:model="poster" accept="image/*"
                                class="mt-1 w-full text-sm text-zinc-600 dark:text-zinc-400
                                       file:mr-3 file:rounded-md file:border-0
