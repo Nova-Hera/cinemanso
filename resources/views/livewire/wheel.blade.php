@@ -25,7 +25,7 @@
         <div class="flex flex-col items-center gap-4 w-full max-w-lg">
 
             <svg id="wheel-svg" viewBox="0 0 400 400"
-                 style="width:100%; max-width:420px; display:block; filter:drop-shadow(0 4px 24px rgba(0,0,0,0.4));">
+                 style="width:100%; max-width:500px; display:block; filter:drop-shadow(0 4px 24px rgba(0,0,0,0.4));">
 
                 <g id="wheel-group" style="transform-origin:200px 200px; transform:rotate(0deg);">
                     @foreach ($segments as $seg)
@@ -34,16 +34,18 @@
                               stroke="rgba(0,0,0,0.25)"
                               stroke-width="1.5" />
                         @if ($seg['showText'])
-                            <text x="{{ $seg['textX'] }}"
-                                  y="{{ $seg['textY'] }}"
-                                  text-anchor="middle"
-                                  dominant-baseline="middle"
-                                  font-size="25"
+                            <text text-anchor="middle"
+                                  font-size="{{ $seg['fontSize'] }}"
                                   font-weight="600"
                                   fill="rgba(255,255,255,0.95)"
-                                  transform="rotate({{ $seg['centerAngle'] }}, {{ $seg['textX'] }}, {{ $seg['textY'] }})"
+                                  transform="rotate({{ $seg['centerAngle'] - 90 }}, {{ $seg['textX'] }}, {{ $seg['textY'] }})"
                                   style="pointer-events:none; font-family:system-ui,sans-serif;">
-                                {{ $seg['titleShort'] }}
+                                @if (count($seg['titleLines']) === 2)
+                                    <tspan x="{{ $seg['textX'] }}" y="{{ round($seg['textY'] - $seg['fontSize'] * 0.65, 2) }}">{{ $seg['titleLines'][0] }}</tspan>
+                                    <tspan x="{{ $seg['textX'] }}" y="{{ round($seg['textY'] + $seg['fontSize'] * 0.65, 2) }}">{{ $seg['titleLines'][1] }}</tspan>
+                                @else
+                                    <tspan x="{{ $seg['textX'] }}" y="{{ $seg['textY'] }}">{{ $seg['titleLines'][0] }}</tspan>
+                                @endif
                             </text>
                         @endif
                     @endforeach

@@ -85,7 +85,7 @@ class Wheel extends Component
         if (!$movie) return;
 
         WheelDraw::create(['movie_id' => $movie->id]);
-        $movie->update(['status' => 'watching']);
+        $movie->update(['status' => 'watching', 'watched_at' => now()->toDateString()]);
         DB::table('wheel_votes')->update(['ready' => false]);
 
         $this->result = [
@@ -182,6 +182,20 @@ class Wheel extends Component
             $endAngle   = $currentAngle + $span;
             $midAngle   = $currentAngle + $span / 2;
 
+            // Split title into up to 2 lines for radial display
+            $words = explode(' ', $item['title']);
+            if (count($words) === 1 || mb_strlen($item['title']) <= 11) {
+                $titleLines = [mb_strlen($item['title']) > 12 ? mb_substr($item['title'], 0, 11) . '…' : $item['title']];
+            } else {
+                $mid = (int) ceil(count($words) / 2);
+                $l1  = implode(' ', array_slice($words, 0, $mid));
+                $l2  = implode(' ', array_slice($words, $mid));
+                $titleLines = [
+                    mb_strlen($l1) > 12 ? mb_substr($l1, 0, 11) . '…' : $l1,
+                    mb_strlen($l2) > 12 ? mb_substr($l2, 0, 11) . '…' : $l2,
+                ];
+            }
+
             $segments[] = [
                 'movie_id'    => $item['movie_id'],
                 'title'       => $item['title'],
@@ -190,12 +204,11 @@ class Wheel extends Component
                 'color'       => $item['color'],
                 'centerAngle' => $midAngle,
                 'path'        => $this->sectorPath(200, 200, 180, 65, $startAngle, $endAngle),
-                'textX'       => round(200 + 125 * sin(deg2rad($midAngle)), 2),
-                'textY'       => round(200 - 125 * cos(deg2rad($midAngle)), 2),
-                'titleShort'  => mb_strlen($item['title']) > 13
-                    ? mb_substr($item['title'], 0, 12) . '…'
-                    : $item['title'],
-                'showText'    => $span > 14,
+                'textX'       => round(200 + 122 * sin(deg2rad($midAngle)), 2),
+                'textY'       => round(200 - 122 * cos(deg2rad($midAngle)), 2),
+                'titleLines'  => $titleLines,
+                'fontSize'    => $span > 40 ? 11 : ($span > 22 ? 10 : 9),
+                'showText'    => $span > 12,
             ];
 
             $currentAngle = $endAngle;
