@@ -6,7 +6,7 @@
             <div style="flex-shrink:0; width:8rem;">
                 <div style="width:8rem; height:12rem; overflow:hidden; border:1px solid rgb(255 255 255)" class="dark:border-zinc-700">
                     @if ($movie->poster)
-                        <img src="{{ asset('storage/' . $movie->poster . '.jpg') }}"
+                        <img src="{{ asset('storage/' . $movie->poster) }}"
                              alt="{{ $movie->title }}"
                              style="width:100%; height:100%; object-fit:cover" />
                     @else

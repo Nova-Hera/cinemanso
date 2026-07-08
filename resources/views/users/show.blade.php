@@ -47,7 +47,7 @@
 
                                 @if ($review->movie->poster)
                                     <div style="flex-shrink:0; width:3rem; height:4.5rem; overflow:hidden; border-radius:0.375rem;">
-                                        <img src="{{ asset('storage/' . $review->movie->poster . '.jpg') }}"
+                                        <img src="{{ asset('storage/' . $review->movie->poster) }}"
                                              alt="{{ $review->movie->title }}"
                                              style="width:100%; height:100%; object-fit:cover;" />
                                     </div>

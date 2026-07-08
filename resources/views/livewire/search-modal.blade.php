@@ -70,7 +70,7 @@ new class extends Component {
                                         <a href="{{ route('movies.show', $movie['slug']) }}" wire:navigate wire:click="close"
                                            class="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                                             @if ($movie['poster'])
-                                                <img src="{{ asset('storage/' . $movie['poster'] . '.jpg') }}" alt="{{ $movie['title'] }}" class="h-10 w-7 rounded object-cover flex-shrink-0" />
+                                                <img src="{{ asset('storage/' . $movie['poster']) }}" alt="{{ $movie['title'] }}" class="h-10 w-7 rounded object-cover flex-shrink-0" />
                                             @else
                                                 <div class="h-10 w-7 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0"></div>
                                             @endif

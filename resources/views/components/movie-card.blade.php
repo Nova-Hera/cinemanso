@@ -7,7 +7,7 @@
 ])
 
 @php
-    $src = $image ? asset('storage/' . $image . '.jpg') : null;
+    $src = $image ? asset('storage/' . $image) : null;
 
     $badge = match ($status) {
         'watched'   => ['label' => 'Visto',      'style' => 'background:rgb(23,221,98);color:#000'],

@@ -43,7 +43,7 @@ new class extends Component {
             'watchedAt'   => 'nullable|date',
             'status'      => 'required|in:watchlist,watching,watched',
             'description' => 'nullable|string',
-            'poster'      => 'nullable|image|mimes:jpeg,jpg|max:4096',
+            'poster'      => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:4096',
         ]);
 
         $base = Str::slug($this->title);
@@ -55,8 +55,9 @@ new class extends Component {
 
         $posterPath = '';
         if ($this->poster) {
-            $this->poster->storeAs('posters', $slug, 'public');
-            $posterPath = 'posters/' . $slug;
+            $ext = $this->poster->extension();
+            $this->poster->storeAs('posters', $slug . '.' . $ext, 'public');
+            $posterPath = 'posters/' . $slug . '.' . $ext;
         }
 
         $movie = Movie::create([
@@ -121,8 +122,8 @@ new class extends Component {
                     <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="3" />
 
                     <div>
-                        <flux:label>Poster (JPG)</flux:label>
-                        <input type="file" wire:model="poster" accept=".jpg,.jpeg"
+                        <flux:label>Poster</flux:label>
+                        <input type="file" wire:model="poster" accept="image/*"
                                class="mt-1 w-full text-sm text-zinc-600 dark:text-zinc-400
                                       file:mr-3 file:rounded-md file:border-0
                                       file:bg-zinc-100 dark:file:bg-zinc-700
