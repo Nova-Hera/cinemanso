@@ -141,9 +141,9 @@ new class extends Component {
              @keydown.escape.window="$wire.close()">
             <div class="absolute inset-0 bg-black/60" wire:click="close"></div>
 
-            <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+            <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden flex flex-col max-h-[90vh]">
 
-                <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
                     <div class="flex items-center gap-2.5">
                         <h2 class="text-base font-semibold">Novo Filme</h2>
                         <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"
@@ -155,7 +155,7 @@ new class extends Component {
                     <flux:button size="sm" icon="x-mark" variant="ghost" inset wire:click="close" />
                 </div>
 
-                <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3">
+                <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3 overflow-y-auto [scrollbar-width:thin]">
 
                     <div>
                         <flux:label>Título</flux:label>
