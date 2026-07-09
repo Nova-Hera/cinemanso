@@ -30,7 +30,7 @@
                 <div class="flex items-center gap-1.5">
                     @foreach ($presentUsers as $u)
                         <div title="{{ $u['name'] }}"
-                             class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ring-2 {{ $u['ready'] ? 'ring-green-500' : 'ring-zinc-600' }}"
+                             class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ring-2 @if($u['ready']) ring-green-500 @else ring-zinc-600 @endif"
                              style="background:rgb(39,39,42); color:#fff;">
                             <img src="{{ asset('storage/' . ($u['picture'] ?: 'default-profile.png')) }}"
                                  alt="{{ $u['name'] }}"
@@ -103,7 +103,6 @@
                       font-weight="700"
                       fill="#18181b"
                       style="pointer-events:none; font-family:system-ui,sans-serif;">
-                    {{ $readyCount }}/{{ $presentCount > 2 ? $presentCount : '2'}}
                 </text>
 
                 <text x="200" y="218"

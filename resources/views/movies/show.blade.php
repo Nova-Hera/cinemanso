@@ -219,9 +219,7 @@
                                         ★ {{ number_format($review->rating, 1) }}
                                     </span>
                                 </div>
-                                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
-                                    {{ $review->content }}
-                                </p>
+                                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">{{ $review->content }}</p>
                             </div>
                         @endforeach
                     </div>
