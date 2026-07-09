@@ -52,11 +52,11 @@ new class extends Component {
         $this->searchResults = $tmdb->search($this->title);
     }
 
-    public function selectResult(int $id): void
+    public function selectResult(int $id, string $type = 'movie'): void
     {
         if (!auth()->check()) return;
 
-        $d = app(Tmdb::class)->details($id);
+        $d = app(Tmdb::class)->details($id, $type);
         if (empty($d)) return;
 
         $this->title         = $d['title'];
@@ -175,7 +175,7 @@ new class extends Component {
                                     <button type="button" wire:click="dismissSearch" class="text-xs text-zinc-400 hover:text-zinc-600">✕</button>
                                 </div>
                                 @foreach ($searchResults as $r)
-                                    <button type="button" wire:click="selectResult({{ $r['id'] }})"
+                                    <button type="button" wire:click="selectResult({{ $r['id'] }}, '{{ $r['type'] }}')"
                                             class="w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-left transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-0">
                                         @if ($r['thumb'])
                                             <img src="{{ $r['thumb'] }}" alt="{{ $r['title'] }}"
@@ -183,9 +183,14 @@ new class extends Component {
                                         @else
                                             <div class="w-8 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" style="aspect-ratio:2/3;"></div>
                                         @endif
-                                        <div class="min-w-0">
+                                        <div class="min-w-0 flex-1">
                                             <p class="text-sm font-medium truncate">{{ $r['title'] }}</p>
-                                            <p class="text-xs text-zinc-400">{{ $r['year'] }}</p>
+                                            <div class="flex items-center gap-1.5 mt-0.5">
+                                                <span class="text-xs text-zinc-400">{{ $r['year'] }}</span>
+                                                @if ($r['type'] === 'tv')
+                                                    <span class="text-xs px-1 rounded" style="background:rgb(99,102,241);color:#fff;">Série</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </button>
                                 @endforeach

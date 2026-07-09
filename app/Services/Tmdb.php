@@ -24,6 +24,10 @@ class Tmdb
         53    => 'Suspense / Thriller',
         10752 => 'Guerra',
         37    => 'Western (Faroeste)',
+        // TV-specific genre IDs
+        10759 => 'Ação',
+        10765 => 'Ficção Científica',
+        10768 => 'Guerra',
     ];
 
     private string $key;
@@ -44,47 +48,52 @@ class Tmdb
 
     public function search(string $query): array
     {
-        $response = Http::timeout(8)->get("{$this->base}/search/movie", [
-            'api_key'        => $this->key,
-            'query'          => $query,
-            'language'       => 'pt-BR',
-            'include_adult'  => 'false',
+        $response = Http::timeout(8)->get("{$this->base}/search/multi", [
+            'api_key'       => $this->key,
+            'query'         => $query,
+            'language'      => 'pt-BR',
+            'include_adult' => 'false',
         ]);
 
-        if (! $response->ok()) {
-            return [];
-        }
+        if (!$response->ok()) return [];
 
-        $results = $response->json('results', []);
-
-        return collect($results)
+        return collect($response->json('results', []))
+            ->filter(fn ($r) => in_array($r['media_type'] ?? '', ['movie', 'tv']))
             ->take(5)
             ->map(fn ($r) => [
                 'id'    => $r['id'],
-                'title' => $r['title'] ?? $r['original_title'] ?? '',
-                'year'  => isset($r['release_date']) ? substr($r['release_date'], 0, 4) : '?',
-                'thumb' => $r['poster_path'] ? $this->imageBase . $r['poster_path'] : null,
+                'type'  => $r['media_type'],
+                'title' => $r['title'] ?? $r['name'] ?? $r['original_title'] ?? $r['original_name'] ?? '',
+                'year'  => substr($r['release_date'] ?? $r['first_air_date'] ?? '', 0, 4) ?: '?',
+                'thumb' => ($r['poster_path'] ?? null) ? $this->imageBase . $r['poster_path'] : null,
             ])
             ->values()
             ->all();
     }
 
-    public function details(int $id): array
+    public function details(int $id, string $type = 'movie'): array
     {
-        $response = Http::timeout(8)->get("{$this->base}/movie/{$id}", [
-            'api_key'          => $this->key,
-            'language'         => 'pt-BR',
+        $endpoint = $type === 'tv' ? "tv/{$id}" : "movie/{$id}";
+
+        $response = Http::timeout(8)->get("{$this->base}/{$endpoint}", [
+            'api_key'            => $this->key,
+            'language'           => 'pt-BR',
             'append_to_response' => 'credits',
         ]);
 
-        if (! $response->ok()) {
-            return [];
-        }
+        if (!$response->ok()) return [];
 
         $data = $response->json();
 
-        $director = collect($data['credits']['crew'] ?? [])
-            ->firstWhere('job', 'Director');
+        if ($type === 'tv') {
+            $title   = $data['name'] ?? $data['original_name'] ?? '';
+            $creator = $data['created_by'][0]['name'] ?? '';
+            $date    = $data['first_air_date'] ?? '';
+        } else {
+            $title   = $data['title'] ?? $data['original_title'] ?? '';
+            $creator = collect($data['credits']['crew'] ?? [])->firstWhere('job', 'Director')['name'] ?? '';
+            $date    = $data['release_date'] ?? '';
+        }
 
         $genres = collect($data['genres'] ?? [])
             ->map(fn ($g) => self::GENRE_MAP[$g['id']] ?? null)
@@ -94,11 +103,11 @@ class Tmdb
             ->all();
 
         return [
-            'title'       => $data['title'] ?? '',
-            'director'    => $director['name'] ?? '',
-            'releaseDate' => $data['release_date'] ?? '',
+            'title'       => $title,
+            'director'    => $creator,
+            'releaseDate' => $date,
             'description' => $data['overview'] ?? '',
-            'posterUrl'   => $data['poster_path'] ? $this->imageBase . $data['poster_path'] : '',
+            'posterUrl'   => ($data['poster_path'] ?? null) ? $this->imageBase . $data['poster_path'] : '',
             'genres'      => $genres,
         ];
     }
