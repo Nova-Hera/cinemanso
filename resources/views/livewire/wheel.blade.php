@@ -103,6 +103,7 @@
                       font-weight="700"
                       fill="#18181b"
                       style="pointer-events:none; font-family:system-ui,sans-serif;">
+                      {{ $readyCount }}/{{ $presentCount > 2 ? $presentCount : '2'}}
                 </text>
 
                 <text x="200" y="218"

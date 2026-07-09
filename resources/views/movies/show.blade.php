@@ -47,7 +47,7 @@
             <div class="flex-1 min-w-0 flex flex-col gap-6">
 
                 @php
-                    $medalColor = fn ($r) => $r == 1 ? 'color:rgb(190,160,0)' : ($r == 2 ? 'color:rgb(192,192,192)' : ($r == 3 ? 'color:rgb(184,115,51)' : 'color:inherit'));
+                    $medalColor = fn ($r) => $r == 1 ? 'color:rgb(190,160,0)' : ($r == 2 ? 'color:rgb(192,192,192)' : ($r == 3 ? 'color:rgb(184,115,51)' : null));
                     $statusBadge = match ($movie->status) {
                         'watched'   => ['label' => 'Visto',      'style' => 'background:rgb(23,221,98);color:#000'],
                         'watching'  => ['label' => 'Assistindo', 'style' => 'background:rgb(217,119,6);color:#fff'],
@@ -71,7 +71,11 @@
                     @if ($ranking !== null)
                         <div class="text-base text-zinc-500 dark:text-zinc-400 flex-shrink-0">
                             Ranqueado
-                            <span class="font-bold" style="{{ $medalColor($ranking) }}">#{{ $ranking }}</span>
+                            @if ($medalColor($ranking))
+                                <span class="font-bold" style="{{ $medalColor($ranking) }}">#{{ $ranking }}/{{ $totalRated }}</span>
+                            @else
+                                <span>#{{ $ranking }}/{{ $totalRated }}</span>
+                            @endif
                         </div>
                     @else
                         <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
@@ -79,7 +83,13 @@
                     @if (!empty($genreRankings))
                         <div class="text-sm text-zinc-500 dark:text-zinc-400 flex flex-wrap gap-x-2 gap-y-0.5">
                             @foreach ($genreRankings as $g => $rank)
-                                <span>Em {{ $g }}: <span class="font-bold" style="{{ $medalColor($rank) }}">#{{ $rank }}</span></span>
+                                <span>Em {{ $g }}:
+                                    @if ($medalColor($rank))
+                                        <span class="font-bold" style="{{ $medalColor($rank) }}">#{{ $rank }}/{{ $genreTotals[$g] }}</span>
+                                    @else
+                                        <span>#{{ $rank }}/{{ $genreTotals[$g] }}</span>
+                                    @endif
+                                </span>
                                 @if (!$loop->last)<span class="text-zinc-300 dark:text-zinc-600">·</span>@endif
                             @endforeach
                         </div>
