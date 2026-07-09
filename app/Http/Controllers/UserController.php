@@ -29,7 +29,8 @@ class UserController extends Controller
     if ($count > 0) {
         $counts = array_count_values($ratings->toArray());
         $max = max($counts);
-        $moda = implode('; ', array_keys($counts, $max));
+        $moda = array_keys($counts, $max);
+        $moda = count($moda) >= 4 ? 'Multimodal' : implode('; ', $moda);
     }
 
     $recent = session()->get('recent_items', []);

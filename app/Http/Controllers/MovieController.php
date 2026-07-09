@@ -32,7 +32,7 @@ class MovieController extends Controller
             $max = max($counts);
 
             $moda = array_keys($counts, $max);
-            $moda = count($moda) >= 3 ? 'Multimodal' : implode('; ', $moda);
+            $moda = count($moda) >= 4 ? 'Multimodal' : implode('; ', $moda);
 
         }
 
