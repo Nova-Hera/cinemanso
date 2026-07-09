@@ -9,7 +9,11 @@
             const target  = (((360 - angle) % 360) + 360) % 360;
             const delta   = (((target - current) % 360) + 360) % 360;
             this.rotation += (5 * 360) + delta;
-            setTimeout(() => { this.showResult = true; this.spinning = false; }, 4200);
+            setTimeout(() => {
+                const audio = new Audio(`{{ asset('storage/spin.mp3') }}`);
+                audio.play().catch(() => {});
+            }, 6500);
+            setTimeout(() => { this.showResult = true; this.spinning = false; }, 10000);
         }
      }"
      x-init="rotation = @js($initRotation); showResult = @js($initShowResult);"
@@ -41,7 +45,7 @@
                  style="width:100%; max-width:500px; display:block; filter:drop-shadow(0 4px 24px rgba(0,0,0,0.4));">
 
                 <g id="wheel-group"
-                   :style="`transform-origin:200px 200px; transform:rotate(${rotation}deg); transition:${spinning ? 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)' : 'none'};`">
+                   :style="`transform-origin:200px 200px; transform:rotate(${rotation}deg); transition:${spinning ? 'transform 10s cubic-bezier(0.17,0.67,0.12,0.99)' : 'none'};`">
                     @foreach ($segments as $seg)
                         <path d="{{ $seg['path'] }}"
                               fill="{{ $seg['color'] }}"
