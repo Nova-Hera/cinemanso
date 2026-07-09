@@ -17,6 +17,7 @@ class Wheel extends Component
     public int    $presentCount   = 0;
     public int    $readyCount      = 0;
     public bool   $iAmReady        = false;
+    public array  $presentUsers    = [];
     public ?array $result          = null;
     public ?int   $drawId          = null;
     public ?float $targetAngle     = null;
@@ -55,7 +56,7 @@ class Wheel extends Component
 
         $this->refresh();
 
-        if ($this->readyCount >= 2) {
+        if ($this->readyCount >= $this->presentCount && $this->presentCount >= 2) {
             $this->doSpin();
         }
     }
@@ -73,18 +74,21 @@ class Wheel extends Component
     {
         $cutoff = now()->subSeconds(12);
 
-        $this->presentCount = DB::table('wheel_votes')
-            ->where('heartbeat_at', '>=', $cutoff)->count();
+        $votes = DB::table('wheel_votes')
+            ->join('users', 'users.id', '=', 'wheel_votes.user_id')
+            ->where('wheel_votes.heartbeat_at', '>=', $cutoff)
+            ->select('users.id', 'users.name', 'users.profile_picture', 'wheel_votes.ready')
+            ->get();
 
-        $this->readyCount = DB::table('wheel_votes')
-            ->where('heartbeat_at', '>=', $cutoff)
-            ->where('ready', true)->count();
-
-        $this->iAmReady = DB::table('wheel_votes')
-            ->where('user_id', auth()->id())
-            ->where('ready', true)
-            ->where('heartbeat_at', '>=', $cutoff)
-            ->exists();
+        $this->presentCount = $votes->count();
+        $this->readyCount   = $votes->where('ready', true)->count();
+        $this->iAmReady     = $votes->where('id', auth()->id())->where('ready', true)->isNotEmpty();
+        $this->presentUsers = $votes->map(fn ($u) => [
+            'name'    => $u->name,
+            'initials' => collect(explode(' ', $u->name))->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode(''),
+            'picture' => $u->profile_picture,
+            'ready'   => (bool) $u->ready,
+        ])->values()->all();
 
         $now    = now();
         $recent = WheelDraw::with('movie')->latest('drawn_at')->first();

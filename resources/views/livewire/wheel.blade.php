@@ -12,7 +12,7 @@
             setTimeout(() => {
                 const audio = new Audio(`{{ asset('storage/spin.mp3') }}`);
                 audio.play().catch(() => {});
-            }, 6500);
+            }, 7500);
             setTimeout(() => { this.showResult = true; this.spinning = false; }, 10000);
         }
      }"
@@ -22,12 +22,23 @@
 
     <div class="w-full flex items-center justify-between">
         <h1 class="text-2xl font-bold tracking-tight">Roleta de Filmes</h1>
-        <div class="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
-            <span>{{ $presentCount }} na página</span>
-            <span class="text-zinc-300 dark:text-zinc-600">·</span>
-            <span style="color:{{ $readyCount >= 2 ? 'rgb(23,221,98)' : 'inherit' }}">
-                {{ $readyCount }}/2 prontos
+        <div class="flex flex-col items-end gap-1.5">
+            <span class="text-sm" style="color:{{ $readyCount >= $presentCount && $presentCount >= 2 ? 'rgb(23,221,98)' : 'rgb(161,161,170)' }}">
+                {{ $readyCount }}/{{ $presentCount }} prontos
             </span>
+            @if (!empty($presentUsers))
+                <div class="flex items-center gap-1.5">
+                    @foreach ($presentUsers as $u)
+                        <div title="{{ $u['name'] }}"
+                             class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ring-2 {{ $u['ready'] ? 'ring-green-500' : 'ring-zinc-600' }}"
+                             style="background:rgb(39,39,42); color:#fff;">
+                            <img src="{{ asset('storage/' . ($u['picture'] ?: 'default-profile.png')) }}"
+                                 alt="{{ $u['name'] }}"
+                                 class="w-full h-full rounded-full object-cover" />
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 
