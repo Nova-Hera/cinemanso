@@ -28,10 +28,9 @@
             <flux:textarea
                 name="content"
                 label="Review"
-                :value="old('content', $review->content)"
                 rows="6"
                 required
-            />
+            >{{ old('content', $review->content) }}</flux:textarea>
 
             @if ($errors->any())
                 <div class="text-sm text-red-500">
