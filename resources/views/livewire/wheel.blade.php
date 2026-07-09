@@ -12,7 +12,7 @@
             setTimeout(() => {
                 const audio = new Audio(`{{ asset('storage/spin.mp3') }}`);
                 audio.play().catch(() => {});
-            }, 7500);
+            }, 8000);
             setTimeout(() => { this.showResult = true; this.spinning = false; }, 10000);
         }
      }"
@@ -103,7 +103,7 @@
                       font-weight="700"
                       fill="#18181b"
                       style="pointer-events:none; font-family:system-ui,sans-serif;">
-                    {{ $readyCount }}/2
+                    {{ $readyCount }}/{{ $presentCount > 2 ? $presentCount : '2'}}
                 </text>
 
                 <text x="200" y="218"

@@ -160,7 +160,10 @@ class Wheel extends Component
         DB::table('wheel_votes')->update(['ready' => false]);
 
         // Broadcast so every other open wheel spins at the same instant.
-        broadcast(new WheelSpun($draw->id, (float) $angle));
+        // Silently ignore failures (e.g. clock skew) — polling fallback covers it.
+        try {
+            broadcast(new WheelSpun($draw->id, (float) $angle));
+        } catch (\Throwable) {}
 
         // refresh() picks up the brand-new draw and animates it for the clicker right away.
         $this->refresh();
