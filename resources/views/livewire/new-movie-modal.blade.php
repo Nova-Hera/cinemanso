@@ -157,7 +157,7 @@ new class extends Component {
 
                 <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3 overflow-y-auto [scrollbar-width:thin]">
 
-                    <div>
+                    <div class="relative">
                         <flux:label>Título</flux:label>
                         <div class="flex items-center gap-1 mt-1">
                             <flux:input wire:model="title" placeholder="Nome do filme" required autofocus class="flex-1" />
@@ -165,33 +165,33 @@ new class extends Component {
                                          variant="ghost" inset
                                          wire:loading.attr="disabled" wire:target="searchTmdb" />
                         </div>
-                    </div>
 
-                    @error('title') <p class="text-xs text-red-500 -mt-2">{{ $message }}</p> @enderror
+                        @error('title') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
 
-                    @if (!empty($searchResults))
-                        <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden -mt-1">
-                            <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
-                                <span class="text-xs text-zinc-500">Selecione o filme correto</span>
-                                <button type="button" wire:click="dismissSearch" class="text-xs text-zinc-400 hover:text-zinc-600">✕</button>
+                        @if (!empty($searchResults))
+                            <div class="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden">
+                                <div class="flex items-center justify-between px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                                    <span class="text-xs text-zinc-500">Selecione o filme correto</span>
+                                    <button type="button" wire:click="dismissSearch" class="text-xs text-zinc-400 hover:text-zinc-600">✕</button>
+                                </div>
+                                @foreach ($searchResults as $r)
+                                    <button type="button" wire:click="selectResult({{ $r['id'] }})"
+                                            class="w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-left transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                                        @if ($r['thumb'])
+                                            <img src="{{ $r['thumb'] }}" alt="{{ $r['title'] }}"
+                                                 class="w-8 rounded flex-shrink-0" style="aspect-ratio:2/3;object-fit:cover;" />
+                                        @else
+                                            <div class="w-8 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" style="aspect-ratio:2/3;"></div>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium truncate">{{ $r['title'] }}</p>
+                                            <p class="text-xs text-zinc-400">{{ $r['year'] }}</p>
+                                        </div>
+                                    </button>
+                                @endforeach
                             </div>
-                            @foreach ($searchResults as $r)
-                                <button type="button" wire:click="selectResult({{ $r['id'] }})"
-                                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-left transition-colors border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    @if ($r['thumb'])
-                                        <img src="{{ $r['thumb'] }}" alt="{{ $r['title'] }}"
-                                             class="w-8 rounded flex-shrink-0" style="aspect-ratio:2/3;object-fit:cover;" />
-                                    @else
-                                        <div class="w-8 rounded bg-zinc-200 dark:bg-zinc-700 flex-shrink-0" style="aspect-ratio:2/3;"></div>
-                                    @endif
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-medium truncate">{{ $r['title'] }}</p>
-                                        <p class="text-xs text-zinc-400">{{ $r['year'] }}</p>
-                                    </div>
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <flux:input wire:model="director" label="Diretor" placeholder="Nome do diretor" />
@@ -253,9 +253,11 @@ new class extends Component {
                         @error('poster') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <flux:button type="submit" class="w-full" style="background:rgb(0,123,24);color:#fff;border:none">
-                        Adicionar Filme
-                    </flux:button>
+                    <div class="flex mt-1">
+                        <flux:button type="submit" class="flex-1" style="background:rgb(0,123,24);color:#fff;border:none">
+                            Adicionar Filme
+                        </flux:button>
+                    </div>
 
                 </form>
             </div>
