@@ -100,14 +100,14 @@ new class extends Component {
              @keydown.escape.window="$wire.close()">
             <div class="absolute inset-0 bg-black/60" wire:click="close"></div>
 
-            <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+            <div class="relative w-full max-w-lg rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden flex flex-col max-h-[90vh]">
 
-                <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
                     <h2 class="text-base font-semibold">Editar Filme</h2>
                     <flux:button size="sm" icon="x-mark" variant="ghost" inset wire:click="close" />
                 </div>
 
-                <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3">
+                <form wire:submit="save" class="px-5 py-3 flex flex-col gap-3 overflow-y-auto [scrollbar-width:thin]">
 
                     <flux:input wire:model="title" label="Título" placeholder="Nome do filme" required autofocus />
 
