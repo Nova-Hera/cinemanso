@@ -243,7 +243,7 @@ new class extends Component {
                             <div class="mt-1 mb-2 flex items-center gap-3">
                                 <img src="{{ $posterUrl }}" alt="Preview"
                                      class="w-12 rounded object-cover flex-shrink-0" style="aspect-ratio:2/3;" />
-                                <span class="text-xs text-zinc-400">Imagem do TMDB — substituir abaixo se necessário</span>
+                                <span class="text-xs text-zinc-400">Imagem do TMDB</span>
                             </div>
                         @endif
                         <input type="file" wire:model="poster" accept="image/*"

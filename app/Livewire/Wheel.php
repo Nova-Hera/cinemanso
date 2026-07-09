@@ -18,6 +18,7 @@ class Wheel extends Component
     public int    $readyCount      = 0;
     public bool   $iAmReady        = false;
     public array  $presentUsers    = [];
+    public array  $presentUserIds  = [];
     public ?array $result          = null;
     public ?int   $drawId          = null;
     public ?float $targetAngle     = null;
@@ -83,12 +84,13 @@ class Wheel extends Component
         $this->presentCount = $votes->count();
         $this->readyCount   = $votes->where('ready', true)->count();
         $this->iAmReady     = $votes->where('id', auth()->id())->where('ready', true)->isNotEmpty();
-        $this->presentUsers = $votes->map(fn ($u) => [
+        $this->presentUsers   = $votes->map(fn ($u) => [
             'name'    => $u->name,
             'initials' => collect(explode(' ', $u->name))->take(2)->map(fn ($w) => mb_substr($w, 0, 1))->implode(''),
             'picture' => $u->profile_picture,
             'ready'   => (bool) $u->ready,
         ])->values()->all();
+        $this->presentUserIds = $votes->pluck('id')->all();
 
         $now    = now();
         $recent = WheelDraw::with('movie')->latest('drawn_at')->first();
@@ -159,6 +161,18 @@ class Wheel extends Component
         $movie->update(['status' => 'watching', 'watched_at' => now()->toDateString()]);
         DB::table('wheel_votes')->update(['ready' => false]);
 
+        // Update fairness weights — only for users present during this spin.
+        $winnerId = $movie->added_by;
+        DB::table('wheel_votes')
+            ->whereIn('user_id', $this->presentUserIds)
+            ->where('user_id', '!=', $winnerId)
+            ->increment('spins_since_last_win');
+        if ($winnerId) {
+            DB::table('wheel_votes')
+                ->where('user_id', $winnerId)
+                ->update(['spins_since_last_win' => 0]);
+        }
+
         // Broadcast so every other open wheel spins at the same instant.
         // Silently ignore failures (e.g. clock skew) — polling fallback covers it.
         try {
@@ -198,6 +212,7 @@ class Wheel extends Component
     private function computeLiveSegments(): array
     {
         $watchlist = Movie::where('status', 'watchlist')
+            ->when(!empty($this->presentUserIds), fn ($q) => $q->whereIn('added_by', $this->presentUserIds))
             ->with('addedBy')
             ->get();
 
@@ -205,30 +220,11 @@ class Wheel extends Component
             return [];
         }
 
-        $totalDraws = WheelDraw::count();
-
-        $userIds = $watchlist->pluck('added_by')->filter()->unique()->values()->toArray();
-        $lastDrawByUser = [];
-        if (!empty($userIds)) {
-            $rows = DB::table('wheel_draws')
-                ->join('movies', 'movies.id', '=', 'wheel_draws.movie_id')
-                ->whereIn('movies.added_by', $userIds)
-                ->selectRaw('movies.added_by as user_id, MAX(wheel_draws.drawn_at) as last_drawn_at')
-                ->groupBy('movies.added_by')
-                ->get();
-            foreach ($rows as $row) {
-                $lastDrawByUser[$row->user_id] = $row->last_drawn_at;
-            }
-        }
-
-        $spinsSinceByUser = [];
-        foreach ($userIds as $uid) {
-            if (isset($lastDrawByUser[$uid])) {
-                $spinsSinceByUser[$uid] = WheelDraw::where('drawn_at', '>', $lastDrawByUser[$uid])->count();
-            } else {
-                $spinsSinceByUser[$uid] = $totalDraws;
-            }
-        }
+        // Weights are stored per-user in wheel_votes and only change while the user is present.
+        $spinsSinceByUser = DB::table('wheel_votes')
+            ->whereIn('user_id', $this->presentUserIds)
+            ->pluck('spins_since_last_win', 'user_id')
+            ->all();
 
         $colorIdx = 0;
         $items    = [];
@@ -236,10 +232,8 @@ class Wheel extends Component
         foreach ($watchlist as $movie) {
             $uid = $movie->added_by ?? 0;
 
-            $spinsSince = $uid ? ($spinsSinceByUser[$uid] ?? $totalDraws) : 0;
-            $weight = $uid
-                ? min(log($spinsSince + 1, 2) + 1, exp($spinsSince / 10))
-                : 1.0;
+            $spinsSince = $spinsSinceByUser[$uid] ?? 0;
+            $weight = min(log($spinsSince + 1, 2) + 1, exp($spinsSince / 10));
 
             $items[] = [
                 'movie_id'  => $movie->id,
