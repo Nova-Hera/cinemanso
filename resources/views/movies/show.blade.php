@@ -42,6 +42,28 @@
                         </div>
                     @endif
                 </dl>
+                @if(!empty($movie->streamings['BR']))
+                <div class="mt-6 border-t border-zinc-200 dark:border-zinc-700 pt-4">
+                    <dt class="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">ONDE ASSISTIR (BR)</dt>
+                    <div class="flex gap-2 flex-wrap">
+                        @foreach($movie->streamings['BR'] as $streaming)
+                            <img src="{{ $streaming['logo'] }}" alt="{{ $streaming['name'] }}"
+                                 title="{{ $streaming['name'] }}" class="w-8 h-8 rounded-md shadow-sm">
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+            @if(!empty($movie->streamings['US']))
+                <div class="mt-4">
+                    <dt class="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">ONDE ASSISTIR (US)</dt>
+                    <div class="flex gap-2 flex-wrap">
+                        @foreach($movie->streamings['US'] as $streaming)
+                            <img src="{{ $streaming['logo'] }}" alt="{{ $streaming['name'] }}"
+                                 title="{{ $streaming['name'] }}" class="w-8 h-8 rounded-md shadow-sm">
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             </div>
 
             <div class="flex-1 min-w-0 flex flex-col gap-6">
@@ -60,7 +82,7 @@
                         <span style="{{ $statusBadge['style'] }}; border-radius:9999px; padding:0.2rem 0.6rem; font-size:0.75rem; font-weight:600; flex-shrink:0;">
                             {{ $statusBadge['label'] }}
                         </span>
-                        
+
                         @auth
                             <div class="ml-auto flex-shrink-0">
                                 <flux:button size="sm" icon="pencil-square" variant="ghost" inset
@@ -102,7 +124,7 @@
                                 {{ rtrim(rtrim(number_format($mediana, 2, '.', ''), '0'), '.') }}
                             </div>
                             <div class="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400 mt-1">MEDIANA</div>
-                        </div>    
+                        </div>
                         <div class="text-center">
                             <div class="text-4xl font-bold tabular-nums" style="color:rgb(23,221,98)">
                                 {{ rtrim(rtrim(number_format($media, 2, '.', ''), '0'), '.') }}

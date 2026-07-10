@@ -75,10 +75,11 @@ class Tmdb
     {
         $endpoint = $type === 'tv' ? "tv/{$id}" : "movie/{$id}";
 
+        // ADICIONADO: 'watch/providers' incluído no append_to_response para economizar requisições
         $response = Http::timeout(8)->get("{$this->base}/{$endpoint}", [
             'api_key'            => $this->key,
             'language'           => 'pt-BR',
-            'append_to_response' => 'credits',
+            'append_to_response' => 'credits,watch/providers',
         ]);
 
         if (!$response->ok()) return [];
@@ -102,6 +103,9 @@ class Tmdb
             ->values()
             ->all();
 
+        // ADICIONADO: Extração dos dados de streaming (BR e US)
+        $providers = $data['watch/providers']['results'] ?? [];
+
         return [
             'title'       => $title,
             'director'    => $creator,
@@ -109,6 +113,24 @@ class Tmdb
             'description' => $data['overview'] ?? '',
             'posterUrl'   => ($data['poster_path'] ?? null) ? $this->imageBase . $data['poster_path'] : '',
             'genres'      => $genres,
+            'streamings'  => [
+                'BR' => $this->formatProviders($providers['BR'] ?? []),
+                'US' => $this->formatProviders($providers['US'] ?? []),
+            ]
         ];
+    }
+
+    /**
+     * ADICIONADO: Método auxiliar para formatar os streamings de assinatura (flatrate)
+     */
+    private function formatProviders(array $countryData): array
+    {
+        // Focamos em 'flatrate' que são os serviços inclusos na assinatura (Netflix, Disney+, Prime, etc)
+        return collect($countryData['flatrate'] ?? [])
+            ->map(fn ($provider) => [
+                'name' => $provider['provider_name'],
+                'logo' => ($provider['logo_path'] ?? null) ? "https://image.tmdb.org/t/p/original" . $provider['logo_path'] : null,
+            ])
+            ->all();
     }
 }

@@ -25,12 +25,14 @@ class Movie extends Model
         'rating',
         'status',
         'added_by',
+        'streamings',
     ];
 
     protected $casts = [
         'release_date' => 'date',
         'watched_at'   => 'date',
         'genres'       => 'array',
+        'streamings' => 'array',
     ];
 
     public function reviews()

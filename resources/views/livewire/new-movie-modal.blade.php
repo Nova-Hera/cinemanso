@@ -25,13 +25,16 @@ new class extends Component {
     public string $posterUrl     = '';
     public        $poster        = null;
 
+    // ADICIONADO: Propriedade para armazenar os provedores de streaming temporariamente
+    public array  $streamings    = ['BR' => [], 'US' => []];
+
     #[On('open-new-movie')]
     public function openModal(): void
     {
         if (!auth()->check()) return;
         $this->open = true;
         $this->reset(['title', 'director', 'releaseDate', 'watchedAt', 'description', 'poster',
-                      'genres', 'searchResults', 'posterUrl']);
+                      'genres', 'searchResults', 'posterUrl', 'streamings']); // ADICIONADO: 'streamings' no reset
         $this->status = 'watchlist';
     }
 
@@ -65,6 +68,7 @@ new class extends Component {
         $this->description   = $d['description'];
         $this->genres        = $d['genres'];
         $this->posterUrl     = $d['posterUrl'];
+        $this->streamings    = $d['streamings'] ?? ['BR' => [], 'US' => []]; // ADICIONADO: Captura os streamings do service
         $this->searchResults = [];
     }
 
@@ -122,6 +126,7 @@ new class extends Component {
             'description'  => $this->description ?: null,
             'poster'       => $posterPath,
             'added_by'     => auth()->id(),
+            'streamings'   => $this->streamings, // ADICIONADO: Grava o array (JSON) de streamings capturados no banco
         ]);
 
         $this->open = false;
@@ -235,6 +240,31 @@ new class extends Component {
                     </div>
 
                     <flux:textarea wire:model="description" label="Sinopse" placeholder="Breve descrição do filme..." rows="2" />
+
+                    {{-- ADICIONADO: Preview Visual dos Streamings capturados antes de Salvar --}}
+                    @if(!empty($streamings['BR']) || !empty($streamings['US']))
+                        <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50/50 dark:bg-zinc-800/30">
+                            <flux:label class="block mb-2 font-medium">Disponibilidade Detectada</flux:label>
+                            <div class="flex flex-col gap-2 text-xs">
+                                @if(!empty($streamings['BR']))
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-semibold text-zinc-500">BR:</span>
+                                        @foreach($streamings['BR'] as $st)
+                                            <img src="{{ $st['logo'] }}" title="{{ $st['name'] }}" class="w-5 h-5 rounded-md shadow-sm" />
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @if(!empty($streamings['US']))
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-semibold text-zinc-500">US:</span>
+                                        @foreach($streamings['US'] as $st)
+                                            <img src="{{ $st['logo'] }}" title="{{ $st['name'] }}" class="w-5 h-5 rounded-md shadow-sm" />
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Poster --}}
                     <div>
