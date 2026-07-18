@@ -60,7 +60,7 @@
                                             ★ {{ number_format($review->rating, 1) }}
                                         </span>
                                     </div>
-                                    <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{{ $review->content }}</p>
+                                    <x-rich-text :text="$review->content" />
                                     <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">{{ $review->created_at->format('d/m/Y') }}</p>
                                 </div>
                             </div>

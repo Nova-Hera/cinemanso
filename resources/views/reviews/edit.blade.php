@@ -25,12 +25,13 @@
                 required
             />
 
-            <flux:textarea
+            <x-review-editor
                 name="content"
+                :value="old('content', $review->content)"
                 label="Review"
-                rows="6"
-                required
-            >{{ old('content', $review->content) }}</flux:textarea>
+                :rows="6"
+                :required="true"
+            />
 
             @if ($errors->any())
                 <div class="text-sm text-red-500">

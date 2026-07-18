@@ -196,7 +196,7 @@
                                         @csrf
                                         <input type="hidden" name="movie_id" value="{{ $movie->id }}">
                                         <flux:input type="number" name="rating" max="10" min="0" step="0.1" label="Nota" placeholder="8.5" required />
-                                        <flux:textarea name="content" label="Review" placeholder="O que você achou?" required />
+                                        <x-review-editor name="content" placeholder="O que você achou?" label="Review" :required="true" />
                                         <flux:button type="submit" variant="primary" class="w-full" style="background:rgb(0,123,24);color:#fff;border:none">Publicar</flux:button>
                                     </form>
                                 </div>
@@ -223,7 +223,7 @@
                                         @csrf
                                         @method('PUT')
                                         <flux:input type="number" name="rating" max="10" min="0" step="0.1" label="Nota" :value="$userReview->rating" required />
-                                        <flux:textarea class="hover:bg-sky-700" name="content" label="Review" required>{{ $userReview->content }}</flux:textarea>
+                                        <x-review-editor name="content" :value="$userReview->content" label="Review" :required="true" />
                                         <flux:button type="submit" variant="primary" class="w-full" style="background:rgb(0,123,24);color:#fff;border:none">Salvar</flux:button>
                                     </form>
                                 </div>
@@ -251,7 +251,7 @@
                                         ★ {{ number_format($review->rating, 1) }}
                                     </span>
                                 </div>
-                                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">{{ $review->content }}</p>
+                                <x-rich-text :text="$review->content" />
                             </div>
                         @endforeach
                     </div>
