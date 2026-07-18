@@ -66,5 +66,3 @@ jobs:
             **/*.md
             .env*
             auth.json
-            composer.json
-            composer.lock
