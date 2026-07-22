@@ -116,7 +116,8 @@ class Tmdb
             'streamings'  => [
                 'BR' => $this->formatProviders($providers['BR'] ?? []),
                 'US' => $this->formatProviders($providers['US'] ?? []),
-            ]
+            ],
+            'imdb_id' => $data['imdb_id'] ?? null,
         ];
     }
 

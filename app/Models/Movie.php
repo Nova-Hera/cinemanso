@@ -26,6 +26,7 @@ class Movie extends Model
         'status',
         'added_by',
         'streamings',
+        'imdb_id',
     ];
 
     protected $casts = [
