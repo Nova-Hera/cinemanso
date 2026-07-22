@@ -66,4 +66,28 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 });
 
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/setup-imdb-secret', function () {
+    $output = "";
+
+    // 1. Roda a Migration
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        $output .= "<b>Migration:</b><br><pre>" . Artisan::output() . "</pre><br>";
+    } catch (\Exception $e) {
+        $output .= "<b>Erro na Migration:</b> " . $e->getMessage() . "<br><br>";
+    }
+
+    // 2. Roda o Comando de Sincronização do IMDb
+    try {
+        Artisan::call('movies:sync-imdb-ids');
+        $output .= "<b>Sync IMDb:</b><br><pre>" . Artisan::output() . "</pre>";
+    } catch (\Exception $e) {
+        $output .= "<b>Erro no Sync:</b> " . $e->getMessage() . "<br>";
+    }
+
+    return $output;
+});
+
 require __DIR__.'/auth.php';
