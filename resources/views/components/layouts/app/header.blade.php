@@ -89,6 +89,10 @@
                         Registrar
                     </flux:menu.item>
 
+                    <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle" wire:navigate class="w-full">
+                        Logar
+                    </flux:menu.item>
+
                     @endauth
                 </flux:menu>
             </flux:dropdown>

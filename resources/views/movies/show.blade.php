@@ -72,10 +72,10 @@
 
                 @if($movie->imdb_id)
                 <div
-                    class="mt-8 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-sm">
+                    class="mt-8 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50">
                     <h3
                         class="text-sm font-bold text-zinc-800 dark:text-zinc-100 mb-3 flex items-center gap-2 leading-tight">
-                        <svg class="w-5 h-5 text-purple-600 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 shrink-0" style="color:rgb(23,221,98)" fill="currentColor" viewBox="0 0 24 24">
                             <path
                                 d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                         </svg>
@@ -84,13 +84,15 @@
 
                     <div class="flex flex-col gap-2.5">
                         <a href="stremio://detail/movie/{{ $movie->imdb_id }}/{{ $movie->imdb_id }}"
-                            class="w-full flex justify-center items-center px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-all">
+                            class="w-full flex justify-center items-center px-3 py-2 rounded-xl text-black text-sm font-semibold transition-all"
+                            style="background:rgb(23,221,98);" onmouseover="this.style.background='rgb(0,123,24)';this.style.color='#fff'" onmouseout="this.style.background='rgb(23,221,98)';this.style.color='#000'">
                             Abrir no App
                         </a>
 
                         <a href="https://web.stremio.com/#/detail/movie/{{ $movie->imdb_id }}/{{ $movie->imdb_id }}"
                             target="_blank" rel="noopener noreferrer"
-                            class="w-full flex justify-center items-center px-3 py-2 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 hover:border-purple-600 dark:hover:border-purple-500 text-zinc-700 dark:text-zinc-300 hover:text-purple-600 text-sm font-semibold text-center transition-all">
+                            class="w-full flex justify-center items-center px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-semibold text-center transition-all"
+                            onmouseover="this.style.borderColor='rgb(0,123,24)';this.style.color='rgb(23,221,98)'" onmouseout="this.style.borderColor='';this.style.color=''">
                             Assistir Web ↗
                         </a>
                     </div>
