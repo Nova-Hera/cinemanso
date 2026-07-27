@@ -141,7 +141,7 @@ function reviewEditorData(initialValue) {
             x-ref="textarea"
             x-model="content"
             name="{{ $name }}"
-            placeholder="{{ $placeholder }}"
+            placeholder="Sua review aqui..."
             rows="{{ $rows }}"
             @if ($required) required @endif
             x-on:focus="focused = true"
