@@ -15,7 +15,7 @@ class RichText extends Component
 
     public static function parse(string $text): string
     {
-        $escaped = htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $escaped = htmlspecialchars(ltrim($text), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         return nl2br(self::applyPatterns($escaped));
     }
 
