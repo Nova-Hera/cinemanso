@@ -218,7 +218,7 @@
                         @if ($userReview === null)
                         <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50
                                     w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-700
-                                    bg-white dark:bg-zinc-900 p-6 shadow-xl" x-cloak x-show="showCreateForm"
+                                    bg-white dark:bg-zinc-900 p-6 shadow-xl" style="max-height:90vh; overflow-y:auto;" x-cloak x-show="showCreateForm"
                             x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"
@@ -245,7 +245,7 @@
                         @if ($userReview !== null)
                         <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50
                                     w-full max-w-md rounded-xl border border-zinc-200 dark:border-zinc-700
-                                    bg-white dark:bg-zinc-900 p-6 shadow-xl" x-cloak x-show="showEditForm"
+                                    bg-white dark:bg-zinc-900 p-6 shadow-xl" style="max-height:90vh; overflow-y:auto;" x-cloak x-show="showEditForm"
                             x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave="transition ease-in duration-150"

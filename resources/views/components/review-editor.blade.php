@@ -154,6 +154,6 @@ function reviewEditorData(initialValue) {
     {{-- Live preview --}}
     <div x-show="content" style="font-size:0.75rem; line-height:1.5;" class="text-zinc-500 dark:text-zinc-400">
         <span style="font-weight:600; letter-spacing:0.05em; text-transform:uppercase; margin-right:0.4rem;">Prévia</span>
-        <span x-html="preview()" class="text-zinc-600 dark:text-zinc-300"></span>
+        <div x-html="preview()" style="max-height:9rem; overflow-y:auto; margin-top:0.25rem;" class="text-zinc-600 dark:text-zinc-300"></div>
     </div>
 </div>
