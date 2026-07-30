@@ -14,6 +14,7 @@ use Livewire\Component;
 class Wheel extends Component
 {
     public array  $segments       = [];
+    public array  $watchlistList  = [];
     public int    $presentCount   = 0;
     public int    $readyCount      = 0;
     public bool   $iAmReady        = false;
@@ -49,6 +50,8 @@ class Wheel extends Component
 
     public function clickCenter(): void
     {
+        $prevPresent = $this->presentCount;   // count as the user last saw it
+
         DB::table('wheel_votes')->upsert(
             ['user_id' => auth()->id(), 'ready' => true, 'heartbeat_at' => now()],
             ['user_id'],
@@ -57,7 +60,13 @@ class Wheel extends Component
 
         $this->refresh();
 
-        if ($this->readyCount >= $this->presentCount && $this->presentCount >= 2) {
+        $allReady    = $this->readyCount >= $this->presentCount && $this->presentCount >= 2;
+        $someoneLeft = $this->presentCount < $prevPresent;   // count dropped since last seen
+
+        // Spin only on a deliberate click at a stable full room — never as a side
+        // effect of someone leaving. The first click after a leave just settles the
+        // now-smaller count; a second, informed click then spins.
+        if ($allReady && !$someoneLeft) {
             $this->doSpin();
         }
     }
@@ -100,6 +109,11 @@ class Wheel extends Component
             && $recent->drawn_at
             && $recent->drawn_at->gt($now->copy()->subMinutes(self::RESULT_WINDOW_MIN));
 
+        // The sidebar list always reflects the current watchlist, grouped by user,
+        // even during the result window when the wheel shows the stored draw.
+        $items = $this->buildWatchlistItems();
+        $this->watchlistList = $this->watchlistListFrom($items);
+
         if ($active) {
             $this->result = [
                 'id'     => $recent->movie->id,
@@ -109,7 +123,7 @@ class Wheel extends Component
             ];
 
             // Show the wheel exactly as it was at spin time so the pointer lands on the winner.
-            $this->segments    = !empty($recent->segments) ? $recent->segments : $this->computeLiveSegments();
+            $this->segments    = !empty($recent->segments) ? $recent->segments : $this->computeLiveSegments($items);
             $this->drawId      = $recent->id;
             $this->targetAngle = $recent->target_angle !== null ? (float) $recent->target_angle : null;
 
@@ -133,7 +147,7 @@ class Wheel extends Component
             }
         } else {
             $this->result         = null;
-            $this->segments       = $this->computeLiveSegments();
+            $this->segments       = $this->computeLiveSegments($items);
             $this->drawId         = null;
             $this->targetAngle    = null;
             $this->initRotation   = 0.0;
@@ -143,7 +157,7 @@ class Wheel extends Component
 
     private function doSpin(): void
     {
-        $live = $this->computeLiveSegments();
+        $live = $this->computeLiveSegments($this->buildWatchlistItems());
         if (empty($live)) return;
 
         $movie = $this->weightedPick($live);
@@ -209,11 +223,18 @@ class Wheel extends Component
         return Movie::find($picked);
     }
 
-    private function computeLiveSegments(): array
+    /**
+     * Fetch the present users' watchlist movies grouped by user (added_by, then
+     * insertion order) with a stable per-movie color. This grouped order drives
+     * the sidebar and the colors; the wheel reshuffles a copy of these items.
+     */
+    private function buildWatchlistItems(): array
     {
         $watchlist = Movie::where('status', 'watchlist')
             ->when(!empty($this->presentUserIds), fn ($q) => $q->whereIn('added_by', $this->presentUserIds))
             ->with('addedBy')
+            ->orderBy('added_by')
+            ->orderBy('id')
             ->get();
 
         if ($watchlist->isEmpty()) {
@@ -243,6 +264,36 @@ class Wheel extends Component
                 'color'     => $this->palette[$colorIdx++ % count($this->palette)],
             ];
         }
+
+        return $items;
+    }
+
+    /**
+     * The sidebar "Filmes na watchlist" rows — grouped by user, colors matching
+     * each movie's slice on the wheel.
+     */
+    private function watchlistListFrom(array $items): array
+    {
+        return array_map(fn ($i) => [
+            'title'     => $i['title'],
+            'user_name' => $i['user_name'],
+            'color'     => $i['color'],
+        ], $items);
+    }
+
+    /**
+     * Build the wheel segments from the shared items in a stable, user-independent
+     * pseudo-random order (sorted by a hash of the movie id), so a user's movies
+     * are scattered around the wheel instead of clustered, while staying stable
+     * across the 3s polls.
+     */
+    private function computeLiveSegments(array $items): array
+    {
+        if (empty($items)) {
+            return [];
+        }
+
+        usort($items, fn ($a, $b) => strcmp(md5((string) $a['movie_id']), md5((string) $b['movie_id'])));
 
         $totalWeight  = array_sum(array_column($items, 'weight'));
         $currentAngle = 0;

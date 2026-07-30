@@ -147,11 +147,11 @@
             <div class="w-full mt-2">
                 <p class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">Filmes na watchlist</p>
                 <div class="flex flex-col gap-1">
-                    @foreach ($segments as $seg)
+                    @foreach ($watchlistList as $item)
                         <div class="flex items-center gap-2 text-sm">
-                            <span style="width:0.75rem; height:0.75rem; border-radius:2px; flex-shrink:0; background:{{ $seg['color'] }};"></span>
-                            <span class="truncate text-zinc-700 dark:text-zinc-300">{{ $seg['title'] }}</span>
-                            <span class="ml-auto text-zinc-400 text-xs flex-shrink-0">{{ $seg['user_name'] }}</span>
+                            <span style="width:0.75rem; height:0.75rem; border-radius:2px; flex-shrink:0; background:{{ $item['color'] }};"></span>
+                            <span class="truncate text-zinc-700 dark:text-zinc-300">{{ $item['title'] }}</span>
+                            <span class="ml-auto text-zinc-400 text-xs flex-shrink-0">{{ $item['user_name'] }}</span>
                         </div>
                     @endforeach
                 </div>
