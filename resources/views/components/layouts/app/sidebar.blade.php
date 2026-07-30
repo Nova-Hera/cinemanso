@@ -335,13 +335,17 @@
                     </flux:menu.item>
                 </form>
                 @else
-                <flux:menu.item :href="route('register')" icon="user-plus" wire:navigate class="w-full">
-                    Registrar
-                </flux:menu.item>
-
-                <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle" wire:navigate class="w-full">
-                    Logar
-                </flux:menu.item>
+                <flux:menu.radio.group>
+                    <flux:menu.item :href="route('register')" icon="user-plus" wire:navigate class="w-full">
+                        Registrar
+                    </flux:menu.item>
+                </flux:menu.radio.group>
+                <flux:menu.separator />
+                <flux:menu.radio.group>
+                    <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle" wire:navigate class="w-full">
+                        Logar
+                    </flux:menu.item>
+                </flux:menu.radio.group>
                 @endauth
             </flux:menu>
         </flux:dropdown>
@@ -503,13 +507,17 @@
                         </flux:menu.item>
                     </form>
                     @else
-                    <flux:menu.item :href="route('register')" icon="user-plus" wire:navigate class="w-full">
-                        Registrar
-                    </flux:menu.item>
-
-                    <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle" wire:navigate class="w-full">
-                        Logar
-                    </flux:menu.item>
+                    <flux:menu.radio.group>
+                        <flux:menu.item :href="route('register')" icon="user-plus" wire:navigate class="w-full">
+                            Registrar
+                        </flux:menu.item>
+                    </flux:menu.radio.group>
+                    <flux:menu.separator />
+                    <flux:menu.radio.group>
+                        <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle" wire:navigate class="w-full">
+                            Logar
+                        </flux:menu.item>
+                    </flux:menu.radio.group>
                     @endauth
                 </flux:menu>
             </flux:dropdown>
