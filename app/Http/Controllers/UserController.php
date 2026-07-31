@@ -9,36 +9,48 @@ use App\Models\User;
 
 class UserController extends Controller
 {
-    public function show(User $user) {        
-    $user->load('reviews.movie');
+    public function show(User $user) {
+        $user->load('reviews.movie', 'addedMovies');
 
-    $ratings = $user->reviews->pluck('rating');
-    $count = $ratings->count();
-    $media = $count ? round($ratings->avg(), 2) : null;
-    $sorted = $ratings->sort()->values();
+        $reviewStats = $this->stats($user->reviews->pluck('rating'));
 
-    if($count===0) {
-        $mediana = null;
-    } elseif($count%2 === 0) {
-        $mediana = round(($sorted[$count/2 - 1] + $sorted[$count/2])/2, 2);
-    } else {
-        $mediana = round($sorted[intdiv($count, 2)], 2);
+        $addedMovies = $user->addedMovies->sortByDesc('created_at')->values();
+        $movieStats  = $this->stats(
+            $addedMovies->pluck('rating')->filter(fn ($r) => $r !== null)->values()
+        );
+
+        $recent = session()->get('recent_items', []);
+        $recent = array_values(array_filter($recent, fn ($i) => !($i['type'] === 'user' && $i['id'] === $user->id)));
+        array_unshift($recent, ['type' => 'user', 'id' => $user->id]);
+        session()->put('recent_items', array_slice($recent, 0, 15));
+
+        return view('users.show', compact('user', 'reviewStats', 'movieStats', 'addedMovies'));
     }
 
-    $moda = null;
-    if ($count > 0) {
-        $counts = array_count_values($ratings->toArray());
-        $max = max($counts);
-        $moda = array_keys($counts, $max);
-        $moda = count($moda) >= 4 ? 'Multimodal' : implode('; ', $moda);
-    }
+    private function stats(\Illuminate\Support\Collection $ratings): array
+    {
+        $count = $ratings->count();
+        if ($count === 0) {
+            return ['media' => null, 'mediana' => null, 'moda' => null];
+        }
 
-    $recent = session()->get('recent_items', []);
-    $recent = array_values(array_filter($recent, fn ($i) => !($i['type'] === 'user' && $i['id'] === $user->id)));
-    array_unshift($recent, ['type' => 'user', 'id' => $user->id]);
-    session()->put('recent_items', array_slice($recent, 0, 15));
+        $media   = round($ratings->avg(), 2);
+        $sorted  = $ratings->sort()->values();
+        $mediana = $count % 2 === 0
+            ? round(($sorted[$count / 2 - 1] + $sorted[$count / 2]) / 2, 2)
+            : round($sorted[intdiv($count, 2)], 2);
 
-    return view('users.show', compact('user', 'media', 'mediana', 'moda'));
+        $counts = array_count_values($ratings->map(fn ($r) => (string) $r)->toArray());
+        $max    = max($counts);
+        $moda   = array_keys($counts, $max);
+        $moda   = count($moda) >= 4
+            ? 'Multimodal'
+            : implode('; ', array_map(
+                fn ($v) => rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'),
+                $moda
+            ));
+
+        return compact('media', 'mediana', 'moda');
     }
 
 }

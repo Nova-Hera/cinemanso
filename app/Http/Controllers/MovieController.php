@@ -8,7 +8,7 @@ use App\Models\Movie;
 class MovieController extends Controller
 {
     public function show(Movie $movie) {
-        $movie->load('reviews.user');
+        $movie->load('reviews.user', 'addedBy');
 
         $ratings = $movie->reviews->pluck('rating');
         $count   = $ratings->count();
@@ -32,7 +32,12 @@ class MovieController extends Controller
             $max = max($counts);
 
             $moda = array_keys($counts, $max);
-            $moda = count($moda) >= 4 ? 'Multimodal' : implode('; ', $moda);
+            $moda = count($moda) >= 4
+                ? 'Multimodal'
+                : implode('; ', array_map(
+                    fn ($v) => rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'),
+                    $moda
+                ));
 
         }
 

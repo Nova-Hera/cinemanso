@@ -131,19 +131,30 @@
                         </div>
                         @endauth
                     </div>
-                    @if ($ranking !== null)
-                    <div class="text-base text-zinc-500 dark:text-zinc-400 flex-shrink-0">
-                        Ranqueado
-                        @if ($medalColor($ranking))
-                        <span class="font-bold"
-                            style="{{ $medalColor($ranking) }}">#{{ $ranking }}/{{ $totalRated }}</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        @if ($ranking !== null)
+                        <div class="text-base text-zinc-500 dark:text-zinc-400 flex-shrink-0">
+                            Ranqueado
+                            @if ($medalColor($ranking))
+                            <span class="font-bold"
+                                style="{{ $medalColor($ranking) }}">#{{ $ranking }}/{{ $totalRated }}</span>
+                            @else
+                            <span>#{{ $ranking }}/{{ $totalRated }}</span>
+                            @endif
+                        </div>
                         @else
-                        <span>#{{ $ranking }}/{{ $totalRated }}</span>
+                        <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
+                        @endif
+
+                        @if ($movie->addedBy)
+                        <a href="{{ route('users.show', ['user' => $movie->addedBy->username]) }}"
+                            title="Adicionado por {{ $movie->addedBy->name }}" class="ml-auto flex-shrink-0">
+                            <img src="{{ asset('storage/' . ($movie->addedBy->profile_picture ?: 'default-profile.png')) }}"
+                                alt="{{ $movie->addedBy->name }}"
+                                class="h-7 w-7 rounded-full object-cover" />
+                        </a>
                         @endif
                     </div>
-                    @else
-                    <div class="text-sm text-zinc-400 dark:text-zinc-500 flex-shrink-0">Sem ranking</div>
-                    @endif
                     @if (!empty($genreRankings))
                     <div class="text-sm text-zinc-500 dark:text-zinc-400 flex flex-wrap gap-x-2 gap-y-0.5">
                         @foreach ($genreRankings as $g => $rank)

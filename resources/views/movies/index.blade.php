@@ -11,6 +11,13 @@
                     <option style="color:black" value="watching"  @selected($currentStatus === 'watching')>Assistindo</option>
                     <option style="color:black" value="watched"   @selected($currentStatus === 'watched')>Visto</option>
                 </select>
+                <select name="genre" onchange="this.form.submit()"
+                        style="background:transparent; border:1px solid rgb(161,161,170); border-radius:0.5rem; padding:0.4rem 0.75rem; font-size:0.875rem; color:inherit; cursor:pointer;">
+                    <option style="color:black" value="" @selected(!$currentGenre)>Todos os gêneros</option>
+                    @foreach (\App\Models\Movie::GENRES as $g)
+                        <option style="color:black" value="{{ $g }}" @selected($currentGenre === $g)>{{ $g }}</option>
+                    @endforeach
+                </select>
                 <select name="sort" onchange="this.form.submit()"
                         style="background:transparent; border:1px solid rgb(161,161,170); border-radius:0.5rem; padding:0.4rem 0.75rem; font-size:0.875rem; color:inherit; cursor:pointer;">
                     <option style="color:black" value="title"   @selected($currentSort === 'title')>Alfabético</option>

@@ -65,5 +65,10 @@ class User extends Authenticatable
         return $this->hasMany(Reviews::class);
     }
 
+    public function addedMovies()
+    {
+        return $this->hasMany(Movie::class, 'added_by');
+    }
+
 
 }

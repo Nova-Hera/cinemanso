@@ -9,10 +9,14 @@ Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('h
 Route::get('movies', function () {
     $status = request('status');
     $sort   = request('sort', 'title');
+    $genre  = request('genre');
 
     $query = \App\Models\Movie::with('reviews');
     if (in_array($status, ['watchlist', 'watching', 'watched'])) {
         $query->where('status', $status);
+    }
+    if (in_array($genre, \App\Models\Movie::GENRES, true)) {
+        $query->whereJsonContains('genres', $genre);
     }
     $movies = $query->get();
 
@@ -37,6 +41,7 @@ Route::get('movies', function () {
         'movies'        => $movies->values(),
         'currentStatus' => $status,
         'currentSort'   => $sort,
+        'currentGenre'  => $genre,
     ]);
 })->name('movies.index');
 
