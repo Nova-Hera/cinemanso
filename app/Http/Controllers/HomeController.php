@@ -27,13 +27,29 @@ class HomeController extends Controller
             }
         }
 
-        $movieQuery = Movie::orderByRaw('CASE WHEN watched_at IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('watched_at', 'desc')
-            ->orderBy('title', 'asc');
+        $movieQuery = Movie::query();
         if (!empty($recentMovieIds)) {
             $movieQuery->whereNotIn('id', $recentMovieIds);
         }
-        foreach ($movieQuery->get() as $movie) {
+
+        // Assistidos primeiro (data mais recente antes), não assistidos por último.
+        // Desempate alfabético ignorando acentos e caixa (ver Movie::sort_title).
+        $sortedMovies = $movieQuery->get()->sort(function ($a, $b) {
+            $aWatched = $a->watched_at !== null;
+            $bWatched = $b->watched_at !== null;
+
+            if ($aWatched !== $bWatched) {
+                return $aWatched ? -1 : 1;
+            }
+
+            if ($aWatched && ! $a->watched_at->eq($b->watched_at)) {
+                return $b->watched_at->getTimestamp() <=> $a->watched_at->getTimestamp();
+            }
+
+            return strnatcmp($a->sort_title, $b->sort_title);
+        });
+
+        foreach ($sortedMovies as $movie) {
             $items[] = ['type' => 'movie', 'model' => $movie];
         }
 

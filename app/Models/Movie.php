@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Movie extends Model
 {
@@ -35,6 +36,15 @@ class Movie extends Model
         'genres'       => 'array',
         'streamings' => 'array',
     ];
+
+    /**
+     * Chave de ordenação alfabética que ignora acentos e caixa.
+     * Ex.: "Ávatar" -> "avatar", "Ação" -> "acao".
+     */
+    public function getSortTitleAttribute(): string
+    {
+        return Str::lower(Str::ascii($this->title));
+    }
 
     public function reviews()
     {

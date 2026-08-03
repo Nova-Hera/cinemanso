@@ -34,7 +34,7 @@ Route::get('movies', function () {
             fn($m) => $m->reviews->isEmpty() ? -1
                 : $m->reviews->pluck('rating')->countBy()->sortDesc()->keys()->first()
         ),
-        default => $movies->sortBy('title'),
+        default => $movies->sortBy(fn ($m) => $m->sort_title, SORT_NATURAL),
     };
 
     return view('movies.index', [
