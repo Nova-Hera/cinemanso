@@ -32,8 +32,6 @@ class HomeController extends Controller
             $movieQuery->whereNotIn('id', $recentMovieIds);
         }
 
-        // Assistidos primeiro (data mais recente antes), não assistidos por último.
-        // Desempate alfabético ignorando acentos e caixa (ver Movie::sort_title).
         $sortedMovies = $movieQuery->get()->sort(function ($a, $b) {
             $aWatched = $a->watched_at !== null;
             $bWatched = $b->watched_at !== null;

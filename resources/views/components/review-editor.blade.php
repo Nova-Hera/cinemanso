@@ -25,7 +25,7 @@ function reviewEditorData(initialValue) {
             if (quote != null) {
                 out += '<span style="display:block;position:relative;margin:0.5rem 0;border:1px solid rgba(161,161,170,0.35);border-left:3px solid rgb(0,123,24);border-radius:0.375rem;background:rgba(161,161,170,0.07);padding:0.7rem 0.9rem 0.6rem 2rem;">'
                      + '<span style="position:absolute;top:0.05rem;left:0.5rem;font-family:Georgia,serif;font-size:1.6rem;line-height:1;color:rgb(0,123,24);opacity:0.55;">&ldquo;</span>'
-                     + '<span style="display:block;font-style:italic;">' + quote + '</span>'
+                     + '<span style="display:block;font-style:italic;">' + process(quote) + '</span>'
                      + (attr ? '<span style="display:block;margin-top:0.4rem;font-size:0.75rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;opacity:0.55;">&mdash; ' + attr + '</span>' : '')
                      + '</span>';
             } else if (bolditalic != null) { out += '<strong style="font-weight:700;"><em>' + process(bolditalic) + '</em></strong>';
