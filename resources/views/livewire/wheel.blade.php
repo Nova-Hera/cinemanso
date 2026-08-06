@@ -3,8 +3,16 @@
         rotation: 0,
         spinning: false,
         showResult: false,
-        spinTo(angle) {
+        animatedDrawId: null,
+        spinTo(detail) {
+            if (!detail || detail.targetAngle == null) return;
+            // Dedup: the same draw can reach us from up to three sources
+            // (local dispatch, Pusher echo, poll fallback) — animate only once.
+            if (detail.drawId != null && detail.drawId === this.animatedDrawId) return;
+            this.animatedDrawId = detail.drawId ?? this.animatedDrawId;
+            this.showResult = false;
             this.spinning = true;
+            const angle   = detail.targetAngle;
             const current = ((this.rotation % 360) + 360) % 360;
             const target  = (((360 - angle) % 360) + 360) % 360;
             const delta   = (((target - current) % 360) + 360) % 360;
@@ -16,8 +24,8 @@
             setTimeout(() => { this.showResult = true; this.spinning = false; }, 10000);
         }
      }"
-     x-init="rotation = @js($initRotation); showResult = @js($initShowResult);"
-     @wheel-spin.window="spinTo($event.detail.targetAngle)"
+     x-init="rotation = @js($initRotation); showResult = @js($initShowResult); animatedDrawId = @js($initShowResult ? $drawId : null);"
+     @wheel-spin.window="spinTo($event.detail)"
      wire:poll.3000ms="poll">
 
     <div class="w-full flex items-center justify-between">

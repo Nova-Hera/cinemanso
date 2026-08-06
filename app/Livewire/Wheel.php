@@ -143,7 +143,7 @@ class Wheel extends Component
 
             if ($willAnimate) {
                 $this->lastAnimatedDrawId = $recent->id;
-                $this->dispatch('wheel-spin', targetAngle: $this->targetAngle);
+                $this->dispatch('wheel-spin', targetAngle: $this->targetAngle, drawId: $recent->id);
             }
         } else {
             $this->result         = null;

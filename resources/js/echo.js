@@ -12,4 +12,14 @@ if (import.meta.env.VITE_PUSHER_APP_KEY) {
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
         forceTLS: true,
     });
+
+    // Trigger the wheel spin straight from the Pusher payload — no server
+    // round-trip — so every client starts within fan-out jitter of each other.
+    // Subscribed once here (survives wire:navigate); the Alpine component
+    // dedups by drawId. Falls back to wire:poll when Pusher is unavailable.
+    window.Echo.channel('wheel').listen('.WheelSpun', (e) => {
+        window.dispatchEvent(new CustomEvent('wheel-spin', {
+            detail: { targetAngle: e.targetAngle, drawId: e.drawId },
+        }));
+    });
 }
