@@ -400,18 +400,6 @@
 
                     @if(auth()->check())
                     <flux:navlist.item
-                        icon="tv"
-                        :href="route('watch-party')"
-                        :current="request()->routeIs('watch-party')"
-                        wire:navigate
-                        class="sidebar-nav-item"
-                    >
-                        <span class="sidebar-fade">Sala</span>
-                    </flux:navlist.item>
-                    @endif
-
-                    @if(auth()->check())
-                    <flux:navlist.item
                         icon="arrow-path"
                         :href="route('wheel')"
                         :current="request()->routeIs('wheel')"

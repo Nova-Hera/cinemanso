@@ -66,8 +66,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('wheel', \App\Livewire\Wheel::class)->name('wheel');
 
-    Route::get('watch-party', \App\Livewire\WatchParty::class)->name('watch-party');
-
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
