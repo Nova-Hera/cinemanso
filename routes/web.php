@@ -5,7 +5,9 @@ use Livewire\Volt\Volt;
 use \App\Http\Controllers;
 
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
+Route::get('/neko', function () {
+    return view('neko.neko');
+})->name('neko');
 Route::get('movies', function () {
     $status = request('status');
     $sort   = request('sort', 'title');
