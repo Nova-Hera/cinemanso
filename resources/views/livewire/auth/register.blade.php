@@ -25,7 +25,13 @@ new #[Layout('components.layouts.auth')] class extends Component {
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $baseUsername = Str::slug($validated['name']);
+        // Str::slug() returns '' when the name has no Latin characters (emoji-only,
+        // CJK, pure punctuation…). An empty username breaks route('users.show', $username),
+        // which 500s every page that links to a user. Always fall back to something usable.
+        $baseUsername = Str::slug($validated['name'])
+            ?: Str::slug(Str::before($validated['email'], '@'))
+            ?: 'user';
+
         $username = $baseUsername;
         
         while (User::where('username', $username)->exists()) {
