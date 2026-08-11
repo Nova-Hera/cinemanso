@@ -5,9 +5,7 @@ use Livewire\Volt\Volt;
 use \App\Http\Controllers;
 
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/neko', function () {
-    return view('neko.neko');
-})->name('neko');
+
 Route::get('movies', function () {
     $status = request('status');
     $sort   = request('sort', 'title');
@@ -67,6 +65,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('reviews/{review}', [\App\Http\Controllers\ReviewController::class, 'update'])->name('reviews.update');
 
     Route::get('wheel', \App\Livewire\Wheel::class)->name('wheel');
+
+    // Auth-gated: the page embeds the Neko password, so it must never be public.
+    Route::get('neko', [\App\Http\Controllers\NekoController::class, 'index'])->name('neko');
 
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');

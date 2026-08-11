@@ -41,4 +41,10 @@ return [
         'image_base' => 'https://image.tmdb.org/t/p/w500',
     ],
 
+    'neko' => [
+        'url'            => rtrim((string) env('NEKO_URL', ''), '/'),
+        'password'       => (string) env('NEKO_PASSWORD', ''),        // regular users
+        'admin_password' => (string) env('NEKO_ADMIN_PASSWORD', ''),  // host (is_admin)
+    ],
+
 ];
