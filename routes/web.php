@@ -69,6 +69,12 @@ Route::middleware(['auth'])->group(function () {
     // Auth-gated: the page embeds the Neko password, so it must never be public.
     Route::get('neko', [\App\Http\Controllers\NekoController::class, 'index'])->name('neko');
 
+    // Admin-only (checked in the controller): resets the shared Neko room for
+    // everyone. Throttled so a double-click can't hammer the Neko host.
+    Route::post('neko/reload', [\App\Http\Controllers\NekoController::class, 'reload'])
+        ->middleware('throttle:10,1')
+        ->name('neko.reload');
+
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');

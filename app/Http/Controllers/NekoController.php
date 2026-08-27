@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NekoSessionReloaded;
+use App\Services\Neko;
+
 class NekoController extends Controller
 {
     /**
@@ -29,5 +32,29 @@ class NekoController extends Controller
         }
 
         return view('neko.neko', ['src' => $src]);
+    }
+
+    /**
+     * Admin-only: reset the shared room when it wedges — frees stuck control and
+     * kicks every client so they re-handshake. The broadcast makes every open
+     * Sala remount its iframe; the redirect covers the admin who pressed it.
+     */
+    public function reload(Neko $neko)
+    {
+        abort_unless(auth()->user()?->is_admin, 403);
+
+        [$ok, $message] = $neko->resetSession();
+
+        if ($ok) {
+            // Silently ignore broadcast failures — the room was still reset, and
+            // Neko's own client retries on its side.
+            try {
+                broadcast(new NekoSessionReloaded());
+            } catch (\Throwable) {}
+        }
+
+        return back()
+            ->with('neko_status', $message)
+            ->with('neko_ok', $ok);
     }
 }

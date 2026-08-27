@@ -22,4 +22,11 @@ if (import.meta.env.VITE_PUSHER_APP_KEY) {
             detail: { targetAngle: e.targetAngle, drawId: e.drawId },
         }));
     });
+
+    // An admin reset the shared Neko room — everyone was disconnected, so every
+    // open Sala remounts its iframe to log back in. Subscribed here, alongside
+    // the wheel, so it survives wire:navigate.
+    window.Echo.channel('neko').listen('.NekoSessionReloaded', () => {
+        window.dispatchEvent(new CustomEvent('neko-reload'));
+    });
 }
