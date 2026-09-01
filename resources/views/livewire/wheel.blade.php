@@ -156,7 +156,11 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">Filmes na watchlist</p>
                 <div class="flex flex-col gap-1">
                     @foreach ($watchlistList as $item)
-                        <div class="flex items-center gap-2 text-sm">
+                        {{-- The drawn movie leaves the list exactly when the result card
+                             appears — same Alpine state, so there is no separate delay. --}}
+                        <div wire:key="wl-{{ $item['movie_id'] }}-{{ $item['drawn'] ? 'd' : 'n' }}"
+                             class="flex items-center gap-2 text-sm"
+                             @if ($item['drawn']) x-show="!showResult" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @endif>
                             <span style="width:0.75rem; height:0.75rem; border-radius:2px; flex-shrink:0; background:{{ $item['color'] }};"></span>
                             <span class="truncate text-zinc-700 dark:text-zinc-300">{{ $item['title'] }}</span>
                             <span class="ml-auto text-zinc-400 text-xs flex-shrink-0">{{ $item['user_name'] }}</span>

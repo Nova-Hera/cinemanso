@@ -109,10 +109,15 @@ class Wheel extends Component
             && $recent->drawn_at
             && $recent->drawn_at->gt($now->copy()->subMinutes(self::RESULT_WINDOW_MIN));
 
-        // The sidebar list always reflects the current watchlist, grouped by user,
-        // even during the result window when the wheel shows the stored draw.
-        $items = $this->buildWatchlistItems();
-        $this->watchlistList = $this->watchlistListFrom($items);
+        // The sidebar list reflects the current watchlist, grouped by user. While a
+        // draw is active its movie is kept in the list even though it is already
+        // "watching": the row is only dropped by the front-end, on the very state
+        // that reveals the result card, so the list can never spoil the spin (and
+        // colors stay in sync with the wheel's stored segments meanwhile).
+        $drawnMovieId = $active ? $recent->movie_id : null;
+
+        $items = $this->buildWatchlistItems($drawnMovieId);
+        $this->watchlistList = $this->watchlistListFrom($items, $drawnMovieId);
 
         if ($active) {
             $this->result = [
@@ -227,11 +232,21 @@ class Wheel extends Component
      * Fetch the present users' watchlist movies grouped by user (added_by, then
      * insertion order) with a stable per-movie color. This grouped order drives
      * the sidebar and the colors; the wheel reshuffles a copy of these items.
+     *
+     * $includeMovieId keeps one movie that already left the watchlist (the movie
+     * of the active draw) in the list, so it stays visible while the wheel spins.
      */
-    private function buildWatchlistItems(): array
+    private function buildWatchlistItems(?int $includeMovieId = null): array
     {
-        $watchlist = Movie::where('status', 'watchlist')
-            ->when(!empty($this->presentUserIds), fn ($q) => $q->whereIn('added_by', $this->presentUserIds))
+        $watchlist = Movie::query()
+            ->where(function ($q) use ($includeMovieId) {
+                $q->where(fn ($q) => $q->where('status', 'watchlist')
+                    ->when(!empty($this->presentUserIds), fn ($q) => $q->whereIn('added_by', $this->presentUserIds)));
+
+                if ($includeMovieId !== null) {
+                    $q->orWhere('id', $includeMovieId);
+                }
+            })
             ->with('addedBy')
             ->orderBy('added_by')
             ->orderBy('id')
@@ -271,13 +286,18 @@ class Wheel extends Component
     /**
      * The sidebar "Filmes na watchlist" rows — grouped by user, colors matching
      * each movie's slice on the wheel.
+     *
+     * The row of $drawnMovieId is flagged so the view can hide it in the same
+     * breath as it reveals the result card, instead of on a timer of its own.
      */
-    private function watchlistListFrom(array $items): array
+    private function watchlistListFrom(array $items, ?int $drawnMovieId = null): array
     {
         return array_map(fn ($i) => [
+            'movie_id'  => $i['movie_id'],
             'title'     => $i['title'],
             'user_name' => $i['user_name'],
             'color'     => $i['color'],
+            'drawn'     => $i['movie_id'] === $drawnMovieId,
         ], $items);
     }
 
