@@ -1,15 +1,16 @@
 @props([
     'name',
-    'value'       => '',
-    'placeholder' => '',
-    'rows'        => 4,
-    'label'       => null,
-    'required'    => false,
+    'value'         => '',
+    'placeholder'   => '',
+    'rows'          => 4,
+    'label'         => null,
+    'required'      => false,
+    'existingImage' => null,
 ])
 
 @once
 <script>
-function reviewEditorData(initialValue) {
+function reviewEditorData(initialValue, existingImageUrl) {
     function esc(s) {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -88,14 +89,58 @@ function reviewEditorData(initialValue) {
         preview() {
             if (!this.content) return '';
             return process(esc(this.content)).replace(/\n/g, '<br>');
+        },
+
+        imagePreviewUrl: existingImageUrl || null,
+
+        async handlePaste(event) {
+            const items = event.clipboardData && event.clipboardData.items;
+            if (!items) return;
+
+            let imageItem = null;
+            for (const item of items) {
+                if (item.type && item.type.startsWith('image/')) { imageItem = item; break; }
+            }
+            if (!imageItem) return;
+
+            event.preventDefault();
+            const file = imageItem.getAsFile();
+            if (!file) return;
+
+            const bitmap = await createImageBitmap(file);
+            const maxHeight = 400;
+            const scale = Math.min(1, maxHeight / bitmap.height);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(bitmap.width * scale);
+            canvas.height = Math.round(bitmap.height * scale);
+            canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const dt = new DataTransfer();
+                dt.items.add(new File([blob], 'pasted-image.jpg', { type: 'image/jpeg' }));
+                this.$refs.imageInput.files = dt.files;
+                this.$refs.removeImage.value = '0';
+                this.imagePreviewUrl = URL.createObjectURL(blob);
+            }, 'image/jpeg', 0.82);
+        },
+
+        removeImage() {
+            this.imagePreviewUrl = null;
+            this.$refs.imageInput.value = '';
+            this.$refs.removeImage.value = '1';
         }
     };
 }
 </script>
 @endonce
 
+@php
+    $existingImageUrl = $existingImage ? asset('storage/' . $existingImage) : null;
+@endphp
+
 <div
-    x-data="reviewEditorData({{ Js::from($value) }})"
+    x-data="reviewEditorData({{ Js::from($value) }}, {{ Js::from($existingImageUrl) }})"
     style="display:flex; flex-direction:column; gap:0.375rem; width:100%;"
 >
     @if ($label)
@@ -146,9 +191,28 @@ function reviewEditorData(initialValue) {
             @if ($required) required @endif
             x-on:focus="focused = true"
             x-on:blur="focused = false"
+            x-on:paste="handlePaste($event)"
             style="width:100%; box-sizing:border-box; resize:vertical; border:none; outline:none; font-size:0.875rem; padding:0.55rem 0.75rem;"
             class="font-sans text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 placeholder-zinc-400 dark:placeholder-zinc-500"
         ></textarea>
+    </div>
+
+    <input type="file" name="image" x-ref="imageInput" accept="image/*" style="display:none">
+    <input type="hidden" name="remove_image" x-ref="removeImage" value="0">
+
+    {{-- Pasted image preview: same accent styling as the quote block, no corner glyph --}}
+    <div
+        x-show="imagePreviewUrl"
+        x-cloak
+        style="position:relative; border:1px solid rgba(161,161,170,0.35); border-left:3px solid rgb(0,123,24); border-radius:0.375rem; background:rgba(161,161,170,0.07); padding:0.7rem 0.9rem;"
+    >
+        <button
+            type="button"
+            x-on:click="removeImage()"
+            title="Remover imagem"
+            style="position:absolute; top:0.4rem; right:0.4rem; width:1.4rem; height:1.4rem; border-radius:9999px; border:none; background:rgba(0,0,0,0.55); color:#fff; font-size:0.75rem; line-height:1; cursor:pointer;"
+        >&times;</button>
+        <img :src="imagePreviewUrl" style="max-width:100%; max-height:400px; object-fit:contain; border-radius:0.25rem; display:block;">
     </div>
 
     {{-- Live preview --}}

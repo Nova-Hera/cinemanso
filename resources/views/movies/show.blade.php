@@ -240,7 +240,7 @@
                                 <flux:button size="sm" icon="x-mark" variant="ghost" inset
                                     @click="showCreateForm = false" />
                             </div>
-                            <form method="POST" action="{{ route('reviews.store') }}"
+                            <form method="POST" action="{{ route('reviews.store') }}" enctype="multipart/form-data"
                                 style="display:flex; flex-direction:column; gap:1.5rem;">
                                 @csrf
                                 <input type="hidden" name="movie_id" value="{{ $movie->id }}">
@@ -267,13 +267,13 @@
                                 <flux:button size="sm" icon="x-mark" variant="ghost" inset
                                     @click="showEditForm = false" />
                             </div>
-                            <form method="POST" action="{{ route('reviews.update', $userReview->id) }}"
+                            <form method="POST" action="{{ route('reviews.update', $userReview->id) }}" enctype="multipart/form-data"
                                 style="display:flex; flex-direction:column; gap:1.5rem;">
                                 @csrf
                                 @method('PUT')
                                 <flux:input type="number" name="rating" max="10" min="0" step="0.1" label="Nota"
                                     :value="$userReview->rating" required />
-                                <x-review-editor name="content" :value="$userReview->content" label="Review" :required="true" />
+                                <x-review-editor name="content" :value="$userReview->content" label="Review" :required="true" :existing-image="$userReview->image_path" />
                                 <flux:button type="submit" variant="primary" class="w-full"
                                     style="background:rgb(0,123,24);color:#fff;border:none">Salvar</flux:button>
                             </form>
@@ -305,6 +305,7 @@
                             </span>
                         </div>
                         <x-rich-text :text="$review->content" />
+                        <x-review-image :path="$review->image_path" />
                     </div>
                     @endforeach
                 </div>

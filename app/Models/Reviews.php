@@ -10,6 +10,7 @@ class Reviews extends Model
         'user_id',
         'movie_id',
         'content',
+        'image_path',
         'rating',
         'status',
     ];

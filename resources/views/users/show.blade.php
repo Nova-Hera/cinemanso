@@ -81,6 +81,7 @@
                                             </span>
                                         </div>
                                         <x-rich-text :text="$review->content" />
+                                        <x-review-image :path="$review->image_path" />
                                         <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">{{ $review->created_at->format('d/m/Y') }}</p>
                                     </div>
                                 </div>
