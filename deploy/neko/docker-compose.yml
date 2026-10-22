@@ -1,0 +1,29 @@
+# Reference copy of /srv/docker/neko/docker-compose.yml on br.dotwired.org (not deployed by CI).
+# Not secret: the passwords come from /srv/docker/neko/.env (NEKO_PASSWORD / NEKO_ADMIN_PASSWORD,
+# the same values the Laravel app has in its own .env).
+#
+# Caddy proxies https://neko-cinemanso.newhera.net -> neko:8080 (/srv/docker/caddy/sites-enabled/neko.caddy).
+# WebRTC media goes straight to the host over UDP 52000-52100, so the cloud firewall must allow that
+# range and the Cloudflare record for the host must be "DNS only" (not proxied).
+services:
+  neko:
+    image: ghcr.io/m1k1o/neko/firefox:latest
+    container_name: neko
+    restart: unless-stopped
+    shm_size: 2gb
+    ports:
+      - "52000-52100:52000-52100/udp"
+    environment:
+      NEKO_DESKTOP_SCREEN: 1920x1080@30
+      NEKO_MEMBER_PROVIDER: multiuser
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_PASSWORD}
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_ADMIN_PASSWORD}
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: "1"
+      NEKO_WEBRTC_NAT1TO1: 147.15.9.221
+    networks:
+      - webserver
+
+networks:
+  webserver:
+    external: true
