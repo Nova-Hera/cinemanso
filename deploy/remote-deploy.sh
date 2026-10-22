@@ -5,7 +5,7 @@ set -euo pipefail
 
 cd /srv/docker/cinemanso
 
-rm -rf app.new
+sudo rm -rf app.new
 mkdir app.new
 tar -xzf release.tar.gz -C app.new
 rm -f release.tar.gz
@@ -18,7 +18,7 @@ ln -sfn ../storage/app/public app.new/public/storage
 sudo chown -R 33:33 app.new/bootstrap/cache
 
 # Swap the code directory; storage/ and .env live in shared/ and are mounted into the container.
-rm -rf app.old
+sudo rm -rf app.old
 [ -d app ] && mv app app.old
 mv app.new app
 
@@ -35,5 +35,5 @@ sudo docker exec cinemanso php artisan migrate --force
 sudo docker exec cinemanso php artisan optimize:clear
 sudo docker exec cinemanso php artisan optimize
 
-rm -rf app.old
+sudo rm -rf app.old
 echo "deploy ok"
