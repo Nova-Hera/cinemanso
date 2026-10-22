@@ -7,18 +7,26 @@ on:
       - completed
     branches:
       - main
+  workflow_dispatch:
+
+env:
+  SSH_HOST: br.dotwired.org
+  SSH_USER: dorosbr
+  # Public host key of br.dotwired.org (ssh-ed25519), pinned so the deploy never trusts an unknown host.
+  SSH_HOST_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDq4yVwyrbj2Mxl3DQPsF2iIlMNVabbzGVapVn0x6Qfa
+  REMOTE_DIR: /srv/docker/cinemanso
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: Production
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - name: Setup PHP
@@ -42,28 +50,37 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          protocol: ftps
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/vendor/**
-            **/.github/**
-            **/tests/**
-            package.json
-            package-lock.json
-            vite.config.js
-            phpunit.xml
-            .editorconfig
-            .gitattributes
-            **/*.md
-            .env*
-            auth.json
-            public/.htaccess
+      - name: Package release
+        run: |
+          ln -sfn ../storage/app/public public/storage
+          tar -czf /tmp/release.tar.gz \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./node_modules' \
+            --exclude='./tests' \
+            --exclude='./deploy' \
+            --exclude='./.env*' \
+            --exclude='./auth.json' \
+            --exclude='./storage/logs/*' \
+            --exclude='./storage/framework/cache/data/*' \
+            --exclude='./storage/framework/sessions/*' \
+            --exclude='./storage/framework/views/*' \
+            .
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "$SSH_HOST $SSH_HOST_KEY" > ~/.ssh/known_hosts
+
+      - name: Upload release
+        run: |
+          scp -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            /tmp/release.tar.gz deploy/Dockerfile deploy/docker-compose.yml deploy/remote-deploy.sh \
+            "$SSH_USER@$SSH_HOST:$REMOTE_DIR/"
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "bash $REMOTE_DIR/remote-deploy.sh"

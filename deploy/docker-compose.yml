@@ -1,0 +1,45 @@
+# Copied to /srv/docker/cinemanso on the server by .github/workflows/deploy.yml.
+# Caddy (the shared container in /srv/docker/caddy) reaches "cinemanso:8080" over the "webserver" network.
+services:
+  app:
+    build: .
+    image: cinemanso-app:latest
+    container_name: cinemanso
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+      PHP_UPLOAD_MAX_FILESIZE: 10M
+      PHP_POST_MAX_SIZE: 12M
+    volumes:
+      - ./app:/var/www/html
+      - ./shared/.env:/var/www/html/.env:ro
+      - ./shared/storage:/var/www/html/storage
+    networks:
+      - default
+      - webserver
+
+  db:
+    image: mariadb:11.4
+    container_name: cinemanso-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: cinemanso
+      MARIADB_USER: cinemanso
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - ./db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+networks:
+  webserver:
+    external: true
