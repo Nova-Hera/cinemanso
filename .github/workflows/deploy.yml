@@ -68,10 +68,14 @@ jobs:
             .
 
       - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          # Strip CRs: a key pasted from Windows carries CRLF, which OpenSSH rejects.
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
           echo "$SSH_HOST $SSH_HOST_KEY" > ~/.ssh/known_hosts
 
       - name: Upload release
