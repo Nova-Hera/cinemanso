@@ -49,6 +49,11 @@ jobs:
 
       - name: Build Assets
         run: npm run build
+        env:
+          # Public Pusher client key/cluster (shipped to every browser anyway). Vite inlines
+          # them at build time; without them resources/js/echo.js never starts Echo.
+          VITE_PUSHER_APP_KEY: 79434b5ff5b61bf696f7
+          VITE_PUSHER_APP_CLUSTER: sa1
 
       - name: Package release
         run: |

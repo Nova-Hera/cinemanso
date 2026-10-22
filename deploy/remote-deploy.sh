@@ -22,7 +22,9 @@ sudo rm -rf app.old
 [ -d app ] && mv app app.old
 mv app.new app
 
-sudo docker compose up -d --build --remove-orphans
+# --pull: always rebuild on the latest base image so PHP security releases are picked up.
+sudo docker compose build --pull
+sudo docker compose up -d --remove-orphans
 # The bind mount points at the new inode only after the container is recreated.
 sudo docker compose up -d --force-recreate app
 
