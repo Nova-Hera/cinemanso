@@ -19,9 +19,12 @@ services:
       - "24454:24454/udp"
     environment:
       NEKO_DESKTOP_SCREEN: 1920x1080@30
-      NEKO_MEMBER_PROVIDER: multiuser
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_PASSWORD}
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_ADMIN_PASSWORD}
+      # Members live in memory and are (re)created by the Laravel app through the admin API each time
+      # someone opens /neko (App\Services\Neko::syncMember), so each user gets their own name + avatar
+      # (the `multiuser` provider only has one fixed profile per role). Only the bot admin exists at boot;
+      # it never connects, it is used by the app to manage members and to reset the room.
+      NEKO_MEMBER_PROVIDER: object
+      NEKO_MEMBER_OBJECT_USERS: '[{"username":"cinemanso-bot","password":"${NEKO_ADMIN_PASSWORD}","profile":{"name":"cinemanso-bot","is_admin":true,"can_login":true,"can_connect":false,"can_watch":false,"can_host":false,"can_share_media":false,"can_access_clipboard":false,"sends_inactive_cursor":false,"can_see_inactive_cursors":false}}]'
       NEKO_WEBRTC_UDPMUX: "24454"
       NEKO_WEBRTC_ICELITE: "1"
       NEKO_WEBRTC_NAT1TO1: 147.15.9.221

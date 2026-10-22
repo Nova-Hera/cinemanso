@@ -15,18 +15,19 @@ class NekoController extends Controller
      *
      * Neko handles control, presence and its own UI.
      */
-    public function index()
+    public function index(Neko $neko)
     {
         $url  = config('services.neko.url');
         $user = auth()->user();
         $src  = null;
 
         if ($url) {
+            // Register the user in Neko first (name + profile picture for its member list).
+            $neko->syncMember($user);
+
             $src = $url.'/?'.http_build_query([
-                'usr'       => $user->username ?: $user->name,   // shown in Neko's member list
-                'pwd'       => $user->is_admin
-                    ? config('services.neko.admin_password')      // host  -> admin rights
-                    : config('services.neko.password'),           // guest -> normal user
+                'usr'       => $neko->memberId($user),            // the Neko member created above
+                'pwd'       => $neko->memberPassword($user),      // admin password -> host rights
                 'show_side' => 1,                                 // open Neko's member/chat sidebar
             ]);
         }
