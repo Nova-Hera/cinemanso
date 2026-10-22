@@ -22,11 +22,11 @@ class NekoController extends Controller
         $src  = null;
 
         if ($url) {
-            // Register the user in Neko first (name + profile picture for its member list).
-            $neko->syncMember($user);
+            // Register this visit in Neko first (name + profile picture for its member list).
+            $memberId = $neko->syncMember($user);
 
             $src = $url.'/?'.http_build_query([
-                'usr'       => $neko->memberId($user),            // the Neko member created above
+                'usr'       => $memberId ?? $user->username,      // the Neko member created above
                 'pwd'       => $neko->memberPassword($user),      // admin password -> host rights
                 'show_side' => 1,                                 // open Neko's member/chat sidebar
             ]);

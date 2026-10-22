@@ -41,12 +41,14 @@ class Neko
     }
 
     /**
-     * Neko member id for a user. Neko rejects ids with spaces or slashes, so don't
-     * use the username; the display name travels in the profile instead.
+     * Neko member id of a user: their username, with anything Neko rejects (spaces,
+     * slashes…) replaced.
      */
     public function memberId(User $user): string
     {
-        return 'u'.$user->id;
+        $id = trim(preg_replace('/[^\p{L}\p{N}_.-]/u', '-', $user->username ?: $user->name), '-');
+
+        return $id !== '' ? $id : 'u'.$user->id;
     }
 
     /**
@@ -60,13 +62,16 @@ class Neko
     }
 
     /**
-     * Create or update the user's Neko member (name, avatar, admin flag, password).
-     * Never throws: Neko being unreachable must not break the page.
+     * Create or update the user's Neko member (name, avatar, admin flag, password) and
+     * return its id, or null when Neko can't be reached. Never throws.
+     *
+     * Neko refuses to log in a member whose previous session is still connected (page
+     * reload, second tab), so that old session is disconnected first.
      */
-    public function syncMember(User $user): bool
+    public function syncMember(User $user): ?string
     {
         if (!$this->configured()) {
-            return false;
+            return null;
         }
 
         try {
@@ -93,26 +98,32 @@ class Neko
                     'profile'  => $profile,
                 ]);
 
-                if ($create->successful()) {
-                    return true;
-                }
-
                 // 422 = already exists: refresh its profile and password instead.
-                if ($create->status() !== 422) {
-                    return false;
+                if (!$create->successful()) {
+                    if ($create->status() !== 422) {
+                        return null;
+                    }
+
+                    $this->request($jar, $token)->post('/api/members/'.rawurlencode($id), $profile);
+                    $this->request($jar, $token)->post('/api/members/'.rawurlencode($id).'/password', [
+                        'password' => $password,
+                    ]);
                 }
 
-                $updated   = $this->request($jar, $token)->post('/api/members/'.rawurlencode($id), $profile);
-                $repassed  = $this->request($jar, $token)->post('/api/members/'.rawurlencode($id).'/password', [
-                    'password' => $password,
-                ]);
+                $sessions = $this->request($jar, $token)->get('/api/sessions');
 
-                return $updated->successful() && $repassed->successful();
-            }) ?? false;
+                foreach ($sessions->successful() ? ($sessions->json() ?? []) : [] as $session) {
+                    if (($session['id'] ?? null) === $id && ($session['state']['is_connected'] ?? false)) {
+                        $this->request($jar, $token)->post('/api/sessions/'.rawurlencode($id).'/disconnect');
+                    }
+                }
+
+                return $id;
+            });
         } catch (\Throwable $e) {
             report($e);
 
-            return false;
+            return null;
         }
     }
 
