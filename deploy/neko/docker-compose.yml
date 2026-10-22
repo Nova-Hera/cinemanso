@@ -3,8 +3,12 @@
 # the same values the Laravel app has in its own .env).
 #
 # Caddy proxies https://neko-cinemanso.newhera.net -> neko:8080 (/srv/docker/caddy/sites-enabled/neko.caddy).
-# WebRTC media goes straight to the host over UDP 52000-52100, so the cloud firewall must allow that
-# range and the Cloudflare record for the host must be "DNS only" (not proxied).
+# WebRTC media goes straight to the host over a single UDP port (UDPMUX), so the Cloudflare record
+# for the host must be "DNS only" (not proxied).
+# The cloud firewall only lets UDP 24454 through (verified with a probe; 52000-52100, 26000 etc. are
+# dropped), so UDPMUX uses 24454 — the port normally reserved for Minecraft Simple Voice Chat, free at
+# the moment. If a voice-chat server ever needs it, open another UDP port in the cloud security list
+# and change UDPMUX + the published port below.
 services:
   neko:
     image: ghcr.io/m1k1o/neko/firefox:latest
@@ -12,13 +16,13 @@ services:
     restart: unless-stopped
     shm_size: 2gb
     ports:
-      - "52000-52100:52000-52100/udp"
+      - "24454:24454/udp"
     environment:
       NEKO_DESKTOP_SCREEN: 1920x1080@30
       NEKO_MEMBER_PROVIDER: multiuser
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_PASSWORD}
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_ADMIN_PASSWORD}
-      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_UDPMUX: "24454"
       NEKO_WEBRTC_ICELITE: "1"
       NEKO_WEBRTC_NAT1TO1: 147.15.9.221
     networks:
