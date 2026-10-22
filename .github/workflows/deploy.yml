@@ -72,9 +72,17 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          # Strip CRs: a key pasted from Windows carries CRLF, which OpenSSH rejects.
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          # The secret may be the raw PEM (possibly with CRLF from Windows) or the same file base64-encoded on one line.
+          if printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' | head -c 11 | grep -q -- '-----BEGIN'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r\n ' | base64 -d > ~/.ssh/deploy_key
+          fi
           chmod 600 ~/.ssh/deploy_key
+          # Safe diagnostics: shape only, never the key material.
+          echo "key file: $(wc -c < ~/.ssh/deploy_key) bytes, $(wc -l < ~/.ssh/deploy_key) lines"
+          head -1 ~/.ssh/deploy_key | cut -c1-40
+          tail -1 ~/.ssh/deploy_key | cut -c1-40
           ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
           echo "$SSH_HOST $SSH_HOST_KEY" > ~/.ssh/known_hosts
 
