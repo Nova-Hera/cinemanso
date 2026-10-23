@@ -2,3 +2,33 @@
 @source "../views";
 @source "../../app";
 @import "../../vendor/livewire/flux/dist/flux.css";
+@import "../../shared/image-cropper/image-cropper.css";
+
+/* Recorte de imagem (shared/image-cropper) com a paleta do app: zinc + verde das notas. */
+.ic-root {
+    --ic-accent: rgb(23, 221, 98);
+    --ic-on-accent: #052e12;
+    --ic-panel: #ffffff;
+    --ic-field: #f4f4f5;
+    --ic-preview-bg: #f4f4f5;
+    --ic-text: #3f3f46;
+    --ic-title: #18181b;
+    --ic-label: #71717a;
+    --ic-muted: #71717a;
+    --ic-border: #d4d4d8;
+    --ic-hover: #f4f4f5;
+    --ic-field-border: #e4e4e7;
+    --ic-radius: 0.5rem;
+}
+.dark .ic-root {
+    --ic-panel: #18181b;
+    --ic-field: #27272a;
+    --ic-preview-bg: #27272a;
+    --ic-text: #d4d4d8;
+    --ic-title: #fafafa;
+    --ic-label: #a1a1aa;
+    --ic-muted: #a1a1aa;
+    --ic-border: #3f3f46;
+    --ic-hover: rgba(255, 255, 255, 0.08);
+    --ic-field-border: #3f3f46;
+}

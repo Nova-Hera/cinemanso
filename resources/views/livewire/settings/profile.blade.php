@@ -166,8 +166,7 @@ new class extends Component {
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div class="flex min-w-0 flex-col gap-1">
                         <flux:label>{{ __('Foto de perfil') }}</flux:label>
-                        <input type="file" wire:model="photo" accept="image/*"
-                               class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:text-zinc-200 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 file:cursor-pointer" />
+                        <x-image-picker-button property="photo">{{ __('Escolher foto') }}</x-image-picker-button>
                         <div wire:loading wire:target="photo" class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enviando…') }}</div>
                         @error('photo')
                             <span class="text-xs text-red-500">{{ $message }}</span>
@@ -176,9 +175,8 @@ new class extends Component {
 
                     <div class="flex min-w-0 flex-col gap-1">
                         <flux:label>{{ __('Banner') }}</flux:label>
-                        <input type="file" wire:model="banner" accept="image/*"
-                               class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:text-zinc-200 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 file:cursor-pointer" />
-                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Ideal 1920×400, até 2 MB. O centro da imagem é o que sempre aparece.') }}</span>
+                        <x-image-picker-button property="banner">{{ __('Escolher banner') }}</x-image-picker-button>
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Proporção 4,8:1 (1920×400), até 2 MB. O centro da imagem é o que sempre aparece.') }}</span>
                         <div wire:loading wire:target="banner" class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enviando…') }}</div>
                         @error('banner')
                             <span class="text-xs text-red-500">{{ $message }}</span>
@@ -190,6 +188,10 @@ new class extends Component {
                         @endif
                     </div>
                 </div>
+
+                @if ($photo || $banner)
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Imagem nova escolhida. Clique em Salvar para aplicar.') }}</p>
+                @endif
             </div>
 
             <flux:input wire:model="name" :label="__('Nome')" type="text" required autofocus autocomplete="name" />
