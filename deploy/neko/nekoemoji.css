@@ -1,0 +1,49 @@
+/*
+ * Emoji customizado (nekoemoji.js): seção "Custom" do seletor e imagens no chat (o editor de recorte é o
+ * shared/image-cropper).
+ * Cores/raios do cliente do Neko: #18191c #202225 #2f3136 #36393f, destaque #19bd9c, raio 5px.
+ */
+
+/* ---- seção no seletor (mesma grade dos emotes: células de 28px) ---- */
+.nk-ce-title {
+  position: sticky; top: -5px; z-index: 2;
+  display: block; width: 100%;
+  padding: 8px 0;
+  background: rgba(47, 49, 54, .9);
+  font-size: 12px; line-height: 12px; font-weight: 500; text-transform: uppercase;
+}
+.nk-ce-grid { display: flex; flex-flow: row wrap; margin: 0; padding: 0; list-style: none; }
+.nk-ce-cell { position: relative; width: 28px; height: 28px; }
+.nk-ce-btn, .nk-ce-add {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0; border: 0;
+  border-radius: 3px; background: transparent; color: inherit; cursor: pointer;
+}
+.nk-ce-btn:hover, .nk-ce-btn:focus-visible { background: #18191c; }
+html.nk-fs .nk-ce-btn:hover, html.nk-fs .nk-ce-btn:focus-visible { background: rgba(24, 25, 28, .6); }
+.nk-ce-btn img { display: block; width: 24px; height: 24px; object-fit: contain; }
+.nk-ce-add {
+  box-sizing: border-box; color: #19bd9c;
+  border: 1px dashed rgba(25, 189, 156, .65); background: rgba(25, 189, 156, .1);
+}
+.nk-ce-add:hover { background: rgba(25, 189, 156, .22); }
+.nk-ce-add svg { width: 14px; height: 14px; }
+.nk-ce-del {
+  position: absolute; right: -3px; top: -3px;
+  display: none; align-items: center; justify-content: center;
+  width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%;
+  background: #d32f2f; color: #fff; cursor: pointer;
+}
+.nk-ce-del svg { width: 8px; height: 8px; }
+.nk-ce-cell:hover .nk-ce-del, .nk-ce-del:focus-visible { display: flex; }
+.nk-ce-add:focus-visible, .nk-ce-btn:focus-visible { outline: 2px solid #19bd9c; outline-offset: -2px; }
+
+/* ---- menu de efeitos (ícone de figurinha da barra): itens custom antes dos do Neko ---- */
+.nk-ce-fx { display: contents; }
+.nk-ce-fx [role="menuitem"]:hover { background: #4f545c29; }
+.nk-ce-sep { flex: 0 0 100%; height: 1px; margin: 4px 0; background: rgba(255, 255, 255, .1); }
+
+/* ---- no chat: emojis 30% maiores que o padrão do Neko (22px -> 28.6px), os embutidos e os customizados ---- */
+.nk-ce-img { display: inline-block; width: 28.6px; height: 28.6px; vertical-align: bottom; object-fit: contain; }
+[data-testid="chat-message"] [data-emoji] { width: 28.6px !important; height: 28.6px !important; }
+[data-testid="chat-message"] span[data-emoji] { font-size: 23.4px !important; line-height: 28.6px !important; }

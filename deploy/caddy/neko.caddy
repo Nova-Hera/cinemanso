@@ -1,0 +1,10 @@
+# Reference copy of /srv/docker/caddy/sites-enabled/neko.caddy on br.dotwired.org (not deployed by CI).
+# /custom-emoji/* is the emoji sidecar (deploy/neko/emoji-server); everything else is Neko itself.
+# Caddy is shared with other sites: back the file up, `caddy validate`, then `caddy reload` (never restart).
+neko-cinemanso.newhera.net {
+    handle /custom-emoji/* {
+        reverse_proxy neko-emoji:3000
+    }
+
+    reverse_proxy neko:8080
+}

@@ -3,7 +3,8 @@
 
         {{-- Profile header --}}
         <div class="-mx-6 -mt-6 lg:-mx-8 lg:-mt-8">
-            <div class="relative h-28 w-full overflow-hidden bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900">
+            {{-- Mesma proporção do banner salvo (1920×400) aqui e na prévia das configs: o enquadramento é igual em qualquer largura. Inline para não depender do build do Tailwind. --}}
+            <div class="relative w-full overflow-hidden bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900" style="aspect-ratio: 4.8 / 1">
                 @if ($user->banner)
                     <img src="{{ asset('storage/' . $user->banner) }}" alt="" class="absolute inset-0 h-full w-full object-cover" />
                 @endif

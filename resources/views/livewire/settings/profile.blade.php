@@ -142,7 +142,7 @@ new class extends Component {
                 <flux:label>{{ __('Imagens do perfil') }}</flux:label>
 
                 <div>
-                    <div class="relative h-28 w-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900">
+                    <div class="relative w-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900" style="aspect-ratio: 4.8 / 1">
                         @php $bannerPreview = $banner?->isPreviewable() ? $banner->temporaryUrl() : ($banner_path ? asset('storage/' . $banner_path) : null); @endphp
                         @if ($bannerPreview)
                             <img

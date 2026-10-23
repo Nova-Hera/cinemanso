@@ -28,16 +28,45 @@ services:
       NEKO_WEBRTC_UDPMUX: "24454"
       NEKO_WEBRTC_ICELITE: "1"
       NEKO_WEBRTC_NAT1TO1: 147.15.9.221
-    # Fullscreen estilo Hyperbeam: nekofs.css/js (deploy/neko/, copiados para /srv/docker/neko/) são
-    # injetados no index.html do cliente a cada boot, então sobrevivem a atualização da imagem.
-    # O `?v=` evita cache; suba o número quando mudar um dos arquivos.
+    # Fullscreen estilo Hyperbeam (nekofs.*) e emoji customizado (nekoemoji.*): os arquivos de deploy/neko/
+    # (copiados para /srv/docker/neko/) são injetados no index.html do cliente a cada boot, então
+    # sobrevivem a atualização da imagem. O `?v=` evita cache; suba o número quando mudar um dos arquivos.
     volumes:
       - ./nekofs.css:/var/www/nekofs.css:ro
       - ./nekofs.js:/var/www/nekofs.js:ro
+      - ./nekoemoji.css:/var/www/nekoemoji.css:ro
+      - ./nekoemoji.js:/var/www/nekoemoji.js:ro
+      # recorte de imagem compartilhado (fonte: shared/image-cropper/, copiado para /srv/docker/neko/)
+      - ./image-cropper.css:/var/www/image-cropper.css:ro
+      - ./image-cropper.js:/var/www/image-cropper.js:ro
     command:
       - /bin/sh
       - -c
-      - "grep -q nekofs /var/www/index.html || sed -i 's#</head>#<link rel=\"stylesheet\" href=\"./nekofs.css?v=3\"><script src=\"./nekofs.js?v=3\"></script></head>#' /var/www/index.html; exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+      - "grep -q nekofs /var/www/index.html || sed -i 's#</head>#<link rel=\"stylesheet\" href=\"./nekofs.css?v=6\"><link rel=\"stylesheet\" href=\"./image-cropper.css?v=6\"><link rel=\"stylesheet\" href=\"./nekoemoji.css?v=6\"><script src=\"./nekofs.js?v=6\"></script><script type=\"module\" src=\"./image-cropper.js?v=6\"></script><script src=\"./nekoemoji.js?v=6\"></script></head>#' /var/www/index.html; exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+    networks:
+      - webserver
+
+  # Guarda as imagens dos emoji customizados (ver emoji-server/server.js). O Caddy manda
+  # https://neko-cinemanso.newhera.net/custom-emoji/* para cá (deploy/caddy/neko.caddy). Quem sobe/remove é
+  # checado no servidor: o cookie de sessão vai para /api/whoami do Neko e precisa ser admin.
+  # Dados em /srv/docker/neko/emoji (criar antes, dono 1005:1005 = usuário dorosbr).
+  neko-emoji:
+    image: node:22-alpine
+    container_name: neko-emoji
+    restart: unless-stopped
+    user: "1005:1005"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command: ["node", "/app/server.js"]
+    environment:
+      NEKO_URL: http://neko:8080
+      DATA_DIR: /data
+    volumes:
+      - ./emoji-server:/app:ro
+      - ./emoji:/data
     networks:
       - webserver
 
