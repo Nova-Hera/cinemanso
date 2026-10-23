@@ -15,6 +15,8 @@ new class extends Component {
     public string $email = '';
     public string $profile_picture = '';
     public $photo = null;
+    public ?string $banner_path = null;
+    public $banner = null;
 
     /**
      * The default avatar filename — never deleted when replaced.
@@ -29,6 +31,7 @@ new class extends Component {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
         $this->profile_picture = Auth::user()->profile_picture ?: self::DEFAULT_PICTURE;
+        $this->banner_path = Auth::user()->banner;
     }
 
     /**
@@ -51,6 +54,7 @@ new class extends Component {
             ],
 
             'photo' => ['nullable', 'image', 'max:2048'],
+            'banner' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $user->fill([
@@ -71,6 +75,18 @@ new class extends Component {
             $this->photo = null;
         }
 
+        if ($this->banner) {
+            $path = $this->banner->store('banners', 'public');
+
+            if ($user->banner) {
+                Storage::disk('public')->delete($user->banner);
+            }
+
+            $user->banner = $path;
+            $this->banner_path = $path;
+            $this->banner = null;
+        }
+
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
@@ -78,6 +94,24 @@ new class extends Component {
         $user->save();
 
         $this->dispatch('profile-updated', name: $user->name);
+    }
+
+    /**
+     * Remove the banner of the currently authenticated user.
+     */
+    public function removeBanner(): void
+    {
+        $user = Auth::user();
+
+        if ($user->banner) {
+            Storage::disk('public')->delete($user->banner);
+        }
+
+        $user->banner = null;
+        $user->save();
+
+        $this->banner_path = null;
+        $this->banner = null;
     }
 
     /**
@@ -104,22 +138,57 @@ new class extends Component {
 
     <x-settings.layout :heading="__('Perfil')" :subheading="__('Atualiza tuas informações de perfil abaixo')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <div class="flex items-center gap-4">
-                <span class="relative flex h-20 w-20 shrink-0 overflow-hidden rounded-full border border-zinc-200 dark:border-zinc-700">
-                    <img
-                        src="{{ $photo ? $photo->temporaryUrl() : asset('storage/' . $profile_picture) }}"
-                        alt="{{ $name }}"
-                        class="h-full w-full object-cover"
-                    />
-                </span>
-                <div class="flex flex-col gap-1">
-                    <flux:label>{{ __('Foto de perfil') }}</flux:label>
-                    <input type="file" wire:model="photo" accept="image/*"
-                           class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:text-zinc-200 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 file:cursor-pointer" />
-                    <div wire:loading wire:target="photo" class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enviando…') }}</div>
-                    @error('photo')
-                        <span class="text-xs text-red-500">{{ $message }}</span>
-                    @enderror
+            <div class="space-y-4">
+                <flux:label>{{ __('Imagens do perfil') }}</flux:label>
+
+                <div>
+                    <div class="relative h-28 w-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900">
+                        @php $bannerPreview = $banner?->isPreviewable() ? $banner->temporaryUrl() : ($banner_path ? asset('storage/' . $banner_path) : null); @endphp
+                        @if ($bannerPreview)
+                            <img
+                                src="{{ $bannerPreview }}"
+                                alt=""
+                                class="absolute inset-0 h-full w-full object-cover"
+                            />
+                        @endif
+                    </div>
+                    <div class="-mt-7 flex px-3">
+                        <span class="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full border-[3px] border-white dark:border-zinc-800">
+                            <img
+                                src="{{ $photo ? $photo->temporaryUrl() : asset('storage/' . $profile_picture) }}"
+                                alt="{{ $name }}"
+                                class="h-full w-full object-cover"
+                            />
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="flex min-w-0 flex-col gap-1">
+                        <flux:label>{{ __('Foto de perfil') }}</flux:label>
+                        <input type="file" wire:model="photo" accept="image/*"
+                               class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:text-zinc-200 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 file:cursor-pointer" />
+                        <div wire:loading wire:target="photo" class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enviando…') }}</div>
+                        @error('photo')
+                            <span class="text-xs text-red-500">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="flex min-w-0 flex-col gap-1">
+                        <flux:label>{{ __('Banner') }}</flux:label>
+                        <input type="file" wire:model="banner" accept="image/*"
+                               class="text-sm text-zinc-600 dark:text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 dark:file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:text-zinc-200 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-600 file:cursor-pointer" />
+                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Ideal 1920×400, até 2 MB. O centro da imagem é o que sempre aparece.') }}</span>
+                        <div wire:loading wire:target="banner" class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Enviando…') }}</div>
+                        @error('banner')
+                            <span class="text-xs text-red-500">{{ $message }}</span>
+                        @enderror
+                        @if ($banner_path && ! $banner)
+                            <button type="button" wire:click="removeBanner" class="self-start cursor-pointer text-xs text-zinc-500 underline hover:text-red-500 dark:text-zinc-400">
+                                {{ __('Remover banner') }}
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
 

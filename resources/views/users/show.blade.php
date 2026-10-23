@@ -2,13 +2,20 @@
     <div class="flex flex-col gap-8" x-data="{ tab: 'reviews' }">
 
         {{-- Profile header --}}
-        <div style="display:flex; align-items:center; gap:1.5rem;">
-            <div style="flex-shrink:0; width:4rem; height:4rem; border-radius:9999px; overflow:hidden;">
-                <img src="{{ asset('storage/' . ($user->profile_picture ?: 'default-profile.png')) }}" alt="{{ $user->name }}" style="width:100%; height:100%; object-fit:cover;" />
+        <div class="-mx-6 -mt-6 lg:-mx-8 lg:-mt-8">
+            <div class="relative h-28 w-full overflow-hidden bg-gradient-to-br from-green-100 to-zinc-100 dark:from-green-950 dark:to-zinc-900">
+                @if ($user->banner)
+                    <img src="{{ asset('storage/' . $user->banner) }}" alt="" class="absolute inset-0 h-full w-full object-cover" />
+                @endif
             </div>
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight">{{ $user->name }}</h1>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $user->username }}</p>
+            <div class="flex items-start gap-4 px-6 lg:px-8">
+                <div class="-mt-8 relative shrink-0 h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full border-[3px] border-white dark:border-zinc-800">
+                    <img src="{{ asset('storage/' . ($user->profile_picture ?: 'default-profile.png')) }}" alt="{{ $user->name }}" class="h-full w-full object-cover" />
+                </div>
+                <div class="min-w-0 pt-2">
+                    <h1 class="text-xl font-bold tracking-tight leading-tight">{{ $user->name }}</h1>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $user->username }}</p>
+                </div>
             </div>
         </div>
 
