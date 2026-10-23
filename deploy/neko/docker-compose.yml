@@ -28,6 +28,16 @@ services:
       NEKO_WEBRTC_UDPMUX: "24454"
       NEKO_WEBRTC_ICELITE: "1"
       NEKO_WEBRTC_NAT1TO1: 147.15.9.221
+    # Fullscreen estilo Hyperbeam: nekofs.css/js (deploy/neko/, copiados para /srv/docker/neko/) são
+    # injetados no index.html do cliente a cada boot, então sobrevivem a atualização da imagem.
+    # O `?v=` evita cache; suba o número quando mudar um dos arquivos.
+    volumes:
+      - ./nekofs.css:/var/www/nekofs.css:ro
+      - ./nekofs.js:/var/www/nekofs.js:ro
+    command:
+      - /bin/sh
+      - -c
+      - "grep -q nekofs /var/www/index.html || sed -i 's#</head>#<link rel=\"stylesheet\" href=\"./nekofs.css?v=3\"><script src=\"./nekofs.js?v=3\"></script></head>#' /var/www/index.html; exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
     networks:
       - webserver
 
