@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Events\WheelSpun;
+use App\Events\WheelStateChanged;
 use App\Models\Movie;
 use App\Models\WheelDraw;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,7 @@ class Wheel extends Component
     public function mount(): void
     {
         $this->heartbeat(true);
+        $this->publish(new WheelStateChanged());   // tell the others someone joined
         $this->refresh();
     }
 
@@ -58,7 +60,7 @@ class Wheel extends Component
             ['ready', 'heartbeat_at']
         );
 
-        $this->refresh();
+        $this->loadPresence();
 
         $allReady    = $this->readyCount >= $this->presentCount && $this->presentCount >= 2;
         $someoneLeft = $this->presentCount < $prevPresent;   // count dropped since last seen
@@ -66,8 +68,30 @@ class Wheel extends Component
         // Spin only on a deliberate click at a stable full room — never as a side
         // effect of someone leaving. The first click after a leave just settles the
         // now-smaller count; a second, informed click then spins.
-        if ($allReady && !$someoneLeft) {
-            $this->doSpin();
+        $spun = $allReady && !$someoneLeft && $this->doSpin();
+
+        // A spin announces itself with WheelSpun; any other click only changed the
+        // ready count, which the other wheels would otherwise learn on their next poll.
+        if (!$spun) {
+            $this->publish(new WheelStateChanged());
+        }
+
+        // One full refresh per click: it picks up the brand-new draw (and animates it
+        // for the clicker right away) or the new ready count.
+        $this->refresh();
+    }
+
+    /**
+     * Push an event to the other open wheels. A failed push must never fail the
+     * user's action — the poll fallback catches up — but it is reported, so a
+     * broken broadcaster shows up in the log instead of silently degrading to polling.
+     */
+    private function publish(object $event): void
+    {
+        try {
+            broadcast($event);
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 
@@ -80,7 +104,8 @@ class Wheel extends Component
         );
     }
 
-    private function refresh(): void
+    /** Who is in the room and who is ready — the cheap half of refresh(). */
+    private function loadPresence(): void
     {
         $cutoff = now()->subSeconds(12);
 
@@ -100,6 +125,11 @@ class Wheel extends Component
             'ready'   => (bool) $u->ready,
         ])->values()->all();
         $this->presentUserIds = $votes->pluck('id')->all();
+    }
+
+    private function refresh(): void
+    {
+        $this->loadPresence();
 
         $now    = now();
         $recent = WheelDraw::with('movie')->latest('drawn_at')->first();
@@ -160,13 +190,14 @@ class Wheel extends Component
         }
     }
 
-    private function doSpin(): void
+    /** Draw a movie and announce it. Returns false when there was nothing to draw. */
+    private function doSpin(): bool
     {
         $live = $this->computeLiveSegments($this->buildWatchlistItems());
-        if (empty($live)) return;
+        if (empty($live)) return false;
 
         $movie = $this->weightedPick($live);
-        if (!$movie) return;
+        if (!$movie) return false;
 
         $angle = $this->angleForMovie($live, $movie->id);
 
@@ -192,22 +223,21 @@ class Wheel extends Component
                 ->update(['spins_since_last_win' => 0]);
         }
 
-        // Broadcast so every other open wheel spins at the same instant.
-        // Silently ignore failures (e.g. clock skew) — polling fallback covers it.
-        try {
-            broadcast(new WheelSpun($draw->id, (float) $angle));
-        } catch (\Throwable) {}
+        // Broadcast so every other open wheel spins at the same instant;
+        // if the push fails the polling fallback covers it.
+        $this->publish(new WheelSpun($draw->id, (float) $angle));
 
-        // refresh() picks up the brand-new draw and animates it for the clicker right away.
-        $this->refresh();
+        return true;
     }
 
     /**
-     * A movie was drawn on another client. Re-sync — refresh() detects the fresh
-     * draw and dispatches the spin animation to this browser.
+     * The wheel changed on another client: a movie was drawn, or someone joined or
+     * flipped ready. Re-sync — refresh() reads the new counts and, for a fresh draw,
+     * dispatches the spin animation to this browser.
      */
     #[On('echo:wheel,.WheelSpun')]
-    public function onWheelSpun(): void
+    #[On('echo:wheel,.WheelStateChanged')]
+    public function onWheelChanged(): void
     {
         $this->refresh();
     }

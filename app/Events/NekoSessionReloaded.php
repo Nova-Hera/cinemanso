@@ -13,8 +13,8 @@ use Illuminate\Queue\SerializesModels;
  * iframe instead of sitting on a dead stream. Carries no payload — the signal is
  * the whole message.
  *
- * Implements ShouldBroadcastNow (not ShouldBroadcast) so the Pusher call happens
- * during the request instead of being queued — shared hosting has no queue worker.
+ * Implements ShouldBroadcastNow (not ShouldBroadcast) so the publish happens
+ * during the request instead of being queued — no queue worker runs in the container.
  */
 class NekoSessionReloaded implements ShouldBroadcastNow
 {

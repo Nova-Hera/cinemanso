@@ -25,8 +25,9 @@ mv app.new app
 # --pull: always rebuild on the latest base image so PHP security releases are picked up.
 sudo docker compose build --pull
 sudo docker compose up -d --remove-orphans
-# The bind mount points at the new inode only after the container is recreated.
-sudo docker compose up -d --force-recreate app
+# The bind mount points at the new inode only after the container is recreated. reverb is a
+# long-lived process that keeps the old code in memory, so it is recreated along with app.
+sudo docker compose up -d --force-recreate app reverb
 
 for i in $(seq 1 30); do
   if sudo docker exec cinemanso php artisan --version >/dev/null 2>&1; then break; fi

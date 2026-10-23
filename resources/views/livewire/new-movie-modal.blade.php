@@ -3,6 +3,7 @@
 use App\Models\Movie;
 use App\Services\Tmdb;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;
@@ -110,11 +111,19 @@ new class extends Component {
             $posterPath = 'posters/' . $slug . '.' . $ext;
         } elseif ($this->posterUrl !== '') {
             try {
-                $body = Http::timeout(10)->get($this->posterUrl)->body();
-                Storage::disk('public')->put("posters/{$slug}.jpg", $body);
-                $posterPath = "posters/{$slug}.jpg";
-            } catch (\Throwable) {
-                $posterPath = '';
+                $response = Http::timeout(15)->retry(3, 500)->get($this->posterUrl);
+                if ($response->successful()) {
+                    $stored = Storage::disk('public')->put("posters/{$slug}.jpg", $response->body());
+                    if ($stored) {
+                        $posterPath = "posters/{$slug}.jpg";
+                    } else {
+                        Log::warning("Falha ao salvar poster no disco para \"{$this->title}\": {$this->posterUrl}");
+                    }
+                } else {
+                    Log::warning("Falha ao baixar poster do TMDB (status {$response->status()}) para \"{$this->title}\": {$this->posterUrl}");
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Falha ao baixar poster do TMDB para \"{$this->title}\": {$e->getMessage()}");
             }
         }
 

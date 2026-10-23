@@ -1,22 +1,32 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
+// Reverb speaks the Pusher protocol, so Echo drives it through pusher-js.
 window.Pusher = Pusher;
 
-// Only boot Echo when a Pusher key is configured. Without it the app still works —
+// Only boot Echo when a Reverb key is configured. Without it the app still works —
 // the wheel falls back to its 3s polling to detect spins.
-if (import.meta.env.VITE_PUSHER_APP_KEY) {
+if (import.meta.env.VITE_REVERB_APP_KEY) {
+    // In production Caddy serves Reverb on the app's own host (wss://<host>/app/...),
+    // so host/port default to wherever the page was loaded from. Locally set
+    // VITE_REVERB_HOST/PORT/SCHEME to point at `php artisan reverb:start`.
+    const secure = (import.meta.env.VITE_REVERB_SCHEME ?? location.protocol.replace(':', '')) === 'https';
+    const port = Number(import.meta.env.VITE_REVERB_PORT ?? (secure ? 443 : 80));
+
     window.Echo = new Echo({
-        broadcaster: 'pusher',
-        key: import.meta.env.VITE_PUSHER_APP_KEY,
-        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
-        forceTLS: true,
+        broadcaster: 'reverb',
+        key: import.meta.env.VITE_REVERB_APP_KEY,
+        wsHost: import.meta.env.VITE_REVERB_HOST ?? location.hostname,
+        wsPort: port,
+        wssPort: port,
+        forceTLS: secure,
+        enabledTransports: ['ws', 'wss'],
     });
 
-    // Trigger the wheel spin straight from the Pusher payload — no server
+    // Trigger the wheel spin straight from the socket payload — no server
     // round-trip — so every client starts within fan-out jitter of each other.
     // Subscribed once here (survives wire:navigate); the Alpine component
-    // dedups by drawId. Falls back to wire:poll when Pusher is unavailable.
+    // dedups by drawId. Falls back to wire:poll when the socket is unavailable.
     window.Echo.channel('wheel').listen('.WheelSpun', (e) => {
         window.dispatchEvent(new CustomEvent('wheel-spin', {
             detail: { targetAngle: e.targetAngle, drawId: e.drawId },

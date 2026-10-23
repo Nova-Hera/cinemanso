@@ -43,6 +43,10 @@ return [
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Publishing runs inside user requests (clicks, page loads): fail fast instead of
+                // stalling them for the framework default of 30s if Reverb is down.
+                'timeout' => 3,
+                'connect_timeout' => 2,
             ],
         ],
 
@@ -63,6 +67,9 @@ return [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
                 // Windows dev machines lack a trusted CA bundle; Linux production servers don't need this.
                 'verify' => env('APP_ENV') !== 'local',
+                // Same fail-fast limits as the reverb connection.
+                'timeout' => 3,
+                'connect_timeout' => 2,
             ],
         ],
 

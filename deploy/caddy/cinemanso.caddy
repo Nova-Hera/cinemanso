@@ -1,0 +1,21 @@
+# Reference copy of /srv/docker/caddy/sites-enabled/cinemanso.caddy on br.dotwired.org (not deployed by CI).
+# Caddy is shared with other sites: validate before reloading, e.g.
+#   sudo docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+#   sudo docker exec caddy caddy reload   --config /etc/caddy/Caddyfile --adapter caddyfile
+cinemanso.newhera.net {
+    request_body {
+        max_size 12MB
+    }
+
+    # Laravel Reverb (container cinemanso-reverb): WebSockets for the wheel / Neko reload. Only the
+    # client endpoint is public; the publish API (/apps/*) is reached by Laravel over the docker
+    # network (REVERB_HOST/PORT/SCHEME in shared/.env), never through here.
+    handle /app/* {
+        reverse_proxy cinemanso-reverb:8080
+    }
+
+    handle {
+        encode zstd gzip
+        reverse_proxy cinemanso:8080
+    }
+}

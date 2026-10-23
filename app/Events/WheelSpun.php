@@ -11,8 +11,8 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Broadcast the moment a movie is drawn so every open wheel spins in sync.
  *
- * Implements ShouldBroadcastNow (not ShouldBroadcast) so the Pusher call happens
- * during the request instead of being queued — shared hosting has no queue worker.
+ * Implements ShouldBroadcastNow (not ShouldBroadcast) so the publish happens
+ * during the request instead of being queued — no queue worker runs in the container.
  */
 class WheelSpun implements ShouldBroadcastNow
 {

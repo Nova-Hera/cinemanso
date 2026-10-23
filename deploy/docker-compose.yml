@@ -21,6 +21,26 @@ services:
       - default
       - webserver
 
+  # WebSocket server (Laravel Reverb) for the real-time wheel/Neko signals. Same image and code as
+  # "app", long-lived process, so remote-deploy.sh recreates it on every deploy. Caddy sends only
+  # /app/* here (cinemanso.caddy); Laravel publishes to it over the internal network as
+  # http://cinemanso-reverb:8080 (REVERB_HOST/PORT/SCHEME in shared/.env), so /apps/* stays unexposed.
+  reverb:
+    image: cinemanso-app:latest
+    pull_policy: never
+    container_name: cinemanso-reverb
+    restart: unless-stopped
+    command: ["php", "/var/www/html/artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    healthcheck:
+      disable: true   # the image's default check probes nginx, which isn't running here
+    volumes:
+      - ./app:/var/www/html
+      - ./shared/.env:/var/www/html/.env:ro
+      - ./shared/storage:/var/www/html/storage
+    networks:
+      - default
+      - webserver
+
   db:
     image: mariadb:11.4
     container_name: cinemanso-db

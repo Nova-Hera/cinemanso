@@ -47,11 +47,13 @@ class NekoController extends Controller
         [$ok, $message] = $neko->resetSession();
 
         if ($ok) {
-            // Silently ignore broadcast failures — the room was still reset, and
-            // Neko's own client retries on its side.
+            // A broadcast failure must not undo the reset — the room was still reset,
+            // and Neko's own client retries on its side — but it is reported.
             try {
                 broadcast(new NekoSessionReloaded());
-            } catch (\Throwable) {}
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return back()

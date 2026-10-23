@@ -7,7 +7,7 @@
         spinTo(detail) {
             if (!detail || detail.targetAngle == null) return;
             // Dedup: the same draw can reach us from up to three sources
-            // (local dispatch, Pusher echo, poll fallback) — animate only once.
+            // (local dispatch, websocket echo, poll fallback) — animate only once.
             if (detail.drawId != null && detail.drawId === this.animatedDrawId) return;
             this.animatedDrawId = detail.drawId ?? this.animatedDrawId;
             this.showResult = false;
@@ -26,7 +26,7 @@
      }"
      x-init="rotation = @js($initRotation); showResult = @js($initShowResult); animatedDrawId = @js($initShowResult ? $drawId : null);"
      @wheel-spin.window="spinTo($event.detail)"
-     wire:poll.3000ms="poll">
+     wire:poll.3000ms.keep-alive="poll">
 
     <div class="w-full flex items-center justify-between">
         <h1 class="text-2xl font-bold tracking-tight">Roleta de Filmes</h1>
